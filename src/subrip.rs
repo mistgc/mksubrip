@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc, Duration};
+use chrono::{DateTime, Duration, Utc};
 
 pub enum Format {
     SRT,
@@ -36,5 +36,14 @@ impl Subrip {
     pub fn set_time(&mut self, begin_time: DateTime<Utc>, duration: Duration) {
         self.begin_time = Some(begin_time);
         self.duration = Some(duration);
+    }
+
+    pub fn get_content(&self) -> Option<String> {
+        match &self.content {
+            Some(content) => {
+                Some(content.clone())
+            }
+            None => None
+        }
     }
 }

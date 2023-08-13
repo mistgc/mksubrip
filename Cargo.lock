@@ -1645,6 +1645,7 @@ dependencies = [
  "egui-video",
  "log",
  "rfd",
+ "sdl2",
 ]
 
 [[package]]

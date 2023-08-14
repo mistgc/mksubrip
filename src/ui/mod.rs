@@ -40,8 +40,9 @@ impl view::View for Ui {
                 .show(ctx, |eui| {
                     eui.heading("Create New Subrip");
                     egui::TextEdit::multiline(&mut self.text).hint_text("Type something").show(eui);
-                    if eui.button("Submit").clicked() {
-                        let subrip = Subrip::new(&self.text);
+                    if eui.button("Submit").clicked() && self.text.as_str() != "" {
+                        let mut subrip = Subrip::new(&self.text);
+                        subrip.set_time(chrono::Utc::now(), chrono::Duration::seconds(10));
                         self.subrips.push(subrip);
                         self.text.drain(..);
                     }
@@ -78,11 +79,15 @@ impl view::View for Ui {
                 eui.heading("b1");
             });
 
+        // subrip(caption) list area
         egui::SidePanel::right("r1")
             .resizable(true)
             .min_width(400.0)
             .show_inside(eui, |eui| {
                 eui.heading("r1");
+                self.subrips.iter_mut().for_each(|i| {
+                    i.draw(ctx, eui);
+                });
             });
 
         egui::TopBottomPanel::bottom("b2")

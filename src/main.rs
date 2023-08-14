@@ -2,6 +2,7 @@ pub mod app;
 pub mod subrip;
 pub mod ui;
 pub mod writer;
+pub mod utils;
 
 pub use app::App;
 

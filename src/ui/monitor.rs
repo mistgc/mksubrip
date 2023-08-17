@@ -1,4 +1,5 @@
 use crate::ui::view::View;
+use chrono::prelude::*;
 use eframe::egui;
 
 pub struct Monitor {
@@ -29,13 +30,23 @@ impl Monitor {
 
     pub fn set_media_path(&mut self, path: impl Into<String>) {
         self.media_path = Some(path.into());
-        let mut player = egui_video::Player::new(&self.ctx, self.media_path.as_ref().unwrap()).unwrap();
+        let mut player =
+            egui_video::Player::new(&self.ctx, self.media_path.as_ref().unwrap()).unwrap();
 
         if let Some(audio_device) = &mut self.audio_device {
             player = player.with_audio(audio_device).unwrap();
         }
 
         self.player = Some(player);
+    }
+
+    /// Get the current timestamp of the media
+    pub fn get_current_timestamp(&self) -> Option<DateTime<Utc>> {
+        use egui_video::Streamer;
+        let player = self.player.as_ref()?;
+        let elapsed_ms = player.video_streamer.lock().elapsed_ms().get();
+
+        Some(Utc.timestamp_millis_opt(elapsed_ms).unwrap())
     }
 }
 

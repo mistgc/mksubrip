@@ -2,14 +2,15 @@ use chrono::{DateTime, Duration, Utc};
 
 use crate::ui::view::View;
 
+#[derive(PartialEq, Eq)]
 pub enum Format {
     SRT,
     ASS,
 }
 
 pub struct Subrip {
-    format: Format,
-    index: u32,
+    pub format: Format,
+    pub index: u32,
     begin_time: Option<DateTime<Utc>>,
     end_time: Option<DateTime<Utc>>,
     duration: Option<Duration>,
@@ -46,19 +47,26 @@ impl Subrip {
         }
     }
 
+    /// Set begin time, end time and duration
+    ///
+    /// `end_time` = `begin_time` + `duration`
     pub fn set_time(&mut self, begin_time: DateTime<Utc>, duration: Duration) {
         self.begin_time = Some(begin_time);
         self.end_time = Some(begin_time + duration.clone());
         self.duration = Some(duration);
     }
 
+    /// Get text content
     pub fn get_content(&self) -> Option<String> {
         match &self.content {
-            Some(content) => {
-                Some(content.clone())
-            }
-            None => None
+            Some(content) => Some(content.clone()),
+            None => None,
         }
+    }
+
+    /// Get begin and end time
+    pub fn get_time(&self) -> (Option<DateTime<Utc>>, Option<DateTime<Utc>>) {
+        (self.begin_time.clone(), self.end_time.clone())
     }
 }
 
@@ -87,7 +95,7 @@ impl View for Subrip {
             self.state = Some(SubripState {
                 begin_time_text: beg_text,
                 end_time_text: end_text,
-                content_text: ctnt_text
+                content_text: ctnt_text,
             });
         }
 

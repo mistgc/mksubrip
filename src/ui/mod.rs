@@ -60,7 +60,7 @@ impl view::View for Ui {
                         Some(monitor) => match monitor.get_current_timestamp() {
                             Some(dt) => {
                                 debug!(
-                                    "Create 
+                                    "Create
                                            a subrip that the begin time at {}",
                                     dt.time().to_string()
                                 );

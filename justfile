@@ -41,3 +41,10 @@ watch command="check":
     check_deps
 
     cargo watch -c -x "{{ command }}"
+
+# Lint rust sources
+clippy:
+    cargo clippy --all-targets --all-features --tests --benches -- -D warnings
+
+fmt:
+    cargo fmt -- --check

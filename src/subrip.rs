@@ -52,21 +52,18 @@ impl Subrip {
     /// `end_time` = `begin_time` + `duration`
     pub fn set_time(&mut self, begin_time: DateTime<Utc>, duration: Duration) {
         self.begin_time = Some(begin_time);
-        self.end_time = Some(begin_time + duration.clone());
+        self.end_time = Some(begin_time + duration);
         self.duration = Some(duration);
     }
 
     /// Get text content
     pub fn get_content(&self) -> Option<String> {
-        match &self.content {
-            Some(content) => Some(content.clone()),
-            None => None,
-        }
+        self.content.as_ref().cloned()
     }
 
     /// Get begin and end time
     pub fn get_time(&self) -> (Option<DateTime<Utc>>, Option<DateTime<Utc>>) {
-        (self.begin_time.clone(), self.end_time.clone())
+        (self.begin_time, self.end_time)
     }
 }
 

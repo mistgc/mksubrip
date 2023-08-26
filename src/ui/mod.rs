@@ -16,6 +16,7 @@ use crate::{
     writer::{SrtWriter, Writer},
 };
 
+#[derive(Default)]
 pub struct Ui {
     monitor: Option<Monitor>,
     state: state::State,
@@ -23,19 +24,6 @@ pub struct Ui {
     text: String,
     export_path: String,
     writer: Option<Box<dyn Writer>>,
-}
-
-impl Default for Ui {
-    fn default() -> Self {
-        Self {
-            monitor: None,
-            state: state::State::default(),
-            subrips: Vec::new(),
-            text: String::new(),
-            export_path: String::new(),
-            writer: None,
-        }
-    }
 }
 
 impl view::View for Ui {
@@ -101,26 +89,23 @@ impl view::View for Ui {
             .min_width(30.0)
             .show_inside(eui, |eui| {
                 eui.heading("l1");
-                match eui.menu_button("📁", Self::nested_menus).inner {
-                    Some(file_menus) => {
-                        if let Some(path) = file_menus.import_file_path {
-                            info!("Import file path: {}", path.to_str().unwrap());
-                            match self.monitor.as_mut() {
-                                Some(monitor) => {
-                                    monitor.set_media_path(path.to_string_lossy().to_string());
-                                }
-                                None => {
-                                    let mut monitor = Monitor::new(ctx);
-                                    monitor.set_media_path(path.to_string_lossy().to_string());
-                                    self.monitor = Some(monitor);
-                                }
+                if let Some(file_menus) = eui.menu_button("📁", Self::nested_menus).inner {
+                    if let Some(path) = file_menus.import_file_path {
+                        info!("Import file path: {}", path.to_str().unwrap());
+                        match self.monitor.as_mut() {
+                            Some(monitor) => {
+                                monitor.set_media_path(path.to_string_lossy().to_string());
+                            }
+                            None => {
+                                let mut monitor = Monitor::new(ctx);
+                                monitor.set_media_path(path.to_string_lossy().to_string());
+                                self.monitor = Some(monitor);
                             }
                         }
-                        if file_menus.state.show_export_srt_file_win {
-                            self.state.show_export_srt_file_win = true;
-                        }
                     }
-                    None => {}
+                    if file_menus.state.show_export_srt_file_win {
+                        self.state.show_export_srt_file_win = true;
+                    }
                 }
             });
         egui::TopBottomPanel::bottom("b1")

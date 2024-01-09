@@ -11,15 +11,10 @@ pub struct Monitor {
 
 impl Monitor {
     pub fn new(ctx: &egui::Context) -> Self {
-        let mut audio_device = None;
-        if let Ok(sdl) = sdl2::init() {
-            if let Ok(audio) = sdl.audio() {
-                if let Ok(device) = egui_video::init_audio_device(&audio) {
-                    audio_device = Some(device);
-                }
-            }
-        }
-
+        let audio_device = match egui_video::AudioDevice::new() {
+            Ok(device) => Some(device),
+            _ => None,
+        };
         Self {
             player: None,
             ctx: ctx.clone(),
@@ -52,12 +47,9 @@ impl Monitor {
 
 impl View for Monitor {
     fn draw(&mut self, _ctx: &eframe::egui::Context, eui: &mut eframe::egui::Ui) {
-        let _width = self.player.as_ref().unwrap().width;
-        let _height = self.player.as_ref().unwrap().height;
-
         self.player
             .as_mut()
             .unwrap()
-            .ui(eui, [eui.available_width(), eui.available_height()]);
+            .ui(eui, [eui.available_width(), eui.available_height()].into());
     }
 }

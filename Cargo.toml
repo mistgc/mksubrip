@@ -1,0 +1,7 @@
+[package]
+name = "mksubrip"
+version = "0.1.0"
+edition = "2021"
+author = "George Cai <georgecai0908@outlook.com>"
+
+[dependencies]

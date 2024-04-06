@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::hash::Hash;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
@@ -28,5 +29,12 @@ impl<T> DerefMut for Shared<T> {
 impl<T> Clone for Shared<T> {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<T> Hash for Shared<T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        let p = self as *const Shared<T> as usize;
+        state.write_usize(p);
     }
 }

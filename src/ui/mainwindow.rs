@@ -1,10 +1,73 @@
 use crate::prelude::*;
-use crate::ui::Drawable;
+use crate::ui::{self, Drawable};
 
-pub struct MainWindow {}
+pub struct MainWindow {
+    pub sig_toggle_new_subrip_win: Signal<()>,
+
+    menu_bar: Shared<ui::MenuBar>,
+    new_subrip_win: Shared<ui::NewSubripWindow>,
+    subrip_list_widget: Shared<ui::SubripListWidget>,
+}
+
+impl Default for MainWindow {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl MainWindow {
+    pub fn new() -> Self {
+        let mut ret = Self {
+            sig_toggle_new_subrip_win: Signal::new(),
+            menu_bar: Shared::new(ui::MenuBar::new()),
+            new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
+            subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
+        };
+        ret.init();
+
+        ret
+    }
+
+    /// Initialize connections between Signals and Functions
+    fn init(&mut self) {
+        self.menu_bar
+            .borrow_mut()
+            .sig_open_selected
+            .connect_func(|path_buf| {
+                info!("Selected file path is {}", path_buf.to_str().unwrap());
+            });
+
+        self.menu_bar
+            .borrow_mut()
+            .sig_export_srt_selected
+            .connect_func(|_| {
+                debug!("Selected export srt...");
+            });
+
+        self.new_subrip_win
+            .borrow_mut()
+            .sig_created_subrip
+            .connect_method(self.subrip_list_widget.clone(), ui::SubripListWidget::add);
+
+        self.sig_toggle_new_subrip_win.connect_method(
+            self.new_subrip_win.clone(),
+            ui::NewSubripWindow::toggle_visible,
+        );
+    }
+
+    fn update_input_event(&mut self, ctx: &egui::Context) {
+        if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::Enter)) {
+            self.sig_toggle_new_subrip_win.emit(&());
+        }
+    }
+}
 
 impl Drawable for MainWindow {
-    fn draw(&mut self, _ctx: &egui::Context, eui: &mut egui::Ui) {
+    fn draw(&mut self, ctx: &egui::Context, eui: &mut egui::Ui) {
+        self.update_input_event(ctx);
+
+        self.new_subrip_win.borrow_mut().draw(ctx, eui);
+
         egui::TopBottomPanel::bottom("b1")
             .resizable(true)
             .min_height(300.0)
@@ -17,6 +80,7 @@ impl Drawable for MainWindow {
             .min_width(30.0)
             .show_inside(eui, |eui| {
                 eui.heading("l1");
+                self.menu_bar.borrow_mut().draw(ctx, eui);
             });
 
         // subrip(caption) list area
@@ -25,6 +89,7 @@ impl Drawable for MainWindow {
             .min_width(400.0)
             .show_inside(eui, |eui| {
                 eui.heading("r1");
+                self.subrip_list_widget.borrow_mut().draw(ctx, eui);
             });
 
         egui::TopBottomPanel::bottom("b2")

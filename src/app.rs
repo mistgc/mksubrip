@@ -9,7 +9,7 @@ pub struct App {
 impl App {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
         Self {
-            mainwindow: ui::MainWindow {},
+            mainwindow: ui::MainWindow::new(),
         }
     }
 }

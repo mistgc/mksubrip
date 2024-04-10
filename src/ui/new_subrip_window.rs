@@ -3,7 +3,7 @@ use crate::ui::Drawable;
 use crate::Subrip;
 
 pub struct NewSubripWindow {
-    pub sig_created_subrip: Signal<Subrip>,
+    pub sig_created_subrip: Signal<Rc<RefCell<Subrip>>>,
 
     title: String,
     subrip_text: String,
@@ -39,7 +39,7 @@ impl NewSubripWindow {
         let duration = Duration::new(5, 0).unwrap();
         let subrip = Subrip::new(&self.subrip_text, begin_time, duration);
 
-        self.sig_created_subrip.emit(&subrip);
+        self.sig_created_subrip.emit(&Rc::new(RefCell::new(subrip)));
     }
 }
 

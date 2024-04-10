@@ -1,7 +1,13 @@
+use crate::app::AppState;
 use crate::prelude::*;
 use crate::ui::{self, Drawable};
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 pub struct MainWindow {
+    app_state: Rc<RefCell<AppState>>,
+
     pub sig_toggle_new_subrip_win: Signal<()>,
 
     menu_bar: Shared<ui::MenuBar>,
@@ -9,15 +15,10 @@ pub struct MainWindow {
     subrip_list_widget: Shared<ui::SubripListWidget>,
 }
 
-impl Default for MainWindow {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl MainWindow {
-    pub fn new() -> Self {
+    pub fn new(app_state: Rc<RefCell<AppState>>) -> Self {
         let mut ret = Self {
+            app_state,
             sig_toggle_new_subrip_win: Signal::new(),
             menu_bar: Shared::new(ui::MenuBar::new()),
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
@@ -44,10 +45,15 @@ impl MainWindow {
                 debug!("Selected export srt...");
             });
 
+        let state = self.app_state.clone();
+        let subrip_list_widget = self.subrip_list_widget.clone();
         self.new_subrip_win
             .borrow_mut()
             .sig_created_subrip
-            .connect_method(self.subrip_list_widget.clone(), ui::SubripListWidget::add);
+            .connect_func(move |subrip| {
+                state.borrow_mut().subrips.push(subrip.clone());
+                subrip_list_widget.borrow_mut().add(subrip.clone());
+            });
 
         self.sig_toggle_new_subrip_win.connect_method(
             self.new_subrip_win.clone(),

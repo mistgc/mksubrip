@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use chrono::NaiveTime;
 
 use crate::ui::Drawable;
@@ -5,9 +8,7 @@ use crate::{prelude::*, Subrip};
 
 #[derive(Default)]
 pub struct SubripListItem {
-    pub sig_begin_time_changed: Signal<NaiveTime>,
-    pub sig_end_time_changed: Signal<NaiveTime>,
-    pub sig_content_changed: Signal<String>,
+    subrip: Rc<RefCell<Subrip>>,
 
     begin_time_text: String,
     end_time_text: String,
@@ -19,31 +20,33 @@ pub struct SubripListItem {
 }
 
 impl SubripListItem {
-    pub fn new(
-        content_text: impl Into<String>,
-        begin_time_text: impl Into<String>,
-        end_time_text: impl Into<String>,
-    ) -> Self {
+    pub fn new(subrip: Rc<RefCell<Subrip>>) -> Self {
         Self {
-            sig_begin_time_changed: Signal::new(),
-            sig_end_time_changed: Signal::new(),
-            sig_content_changed: Signal::new(),
-            content_text: content_text.into(),
-            begin_time_text: begin_time_text.into(),
-            end_time_text: end_time_text.into(),
+            subrip: subrip.clone(),
+            content_text: subrip.borrow().get_content(),
+            begin_time_text: subrip
+                .borrow()
+                .get_begin_time()
+                .format("%H:%M:%S")
+                .to_string(),
+            end_time_text: subrip
+                .borrow()
+                .get_end_time()
+                .format("%H:%M:%S")
+                .to_string(),
             old_content_text: String::new(),
             old_begin_time_text: String::new(),
             old_end_time_text: String::new(),
         }
     }
 
-    fn check_text(&mut self) {
+    fn sync_data(&mut self) {
         if self.begin_time_text != self.old_begin_time_text {
             self.old_begin_time_text = self.begin_time_text.clone();
             if let Ok(naive_time) =
                 NaiveTime::parse_from_str(self.old_begin_time_text.as_str(), "%H:%M:%S")
             {
-                self.sig_begin_time_changed.emit(&naive_time);
+                self.subrip.borrow_mut().set_begin_time(&naive_time);
             }
         }
         if self.end_time_text != self.old_end_time_text {
@@ -51,12 +54,14 @@ impl SubripListItem {
             if let Ok(naive_time) =
                 NaiveTime::parse_from_str(self.old_end_time_text.as_str(), "%H:%M:%S")
             {
-                self.sig_end_time_changed.emit(&naive_time);
+                self.subrip.borrow_mut().set_end_time(&naive_time);
             }
         }
         if self.content_text != self.old_content_text {
             self.old_content_text = self.content_text.clone();
-            self.sig_content_changed.emit(&self.old_content_text);
+            self.subrip
+                .borrow_mut()
+                .set_content(self.old_content_text.as_str());
         }
     }
 }
@@ -81,16 +86,28 @@ impl Drawable for SubripListItem {
             .show(eui);
         eui.separator();
 
-        self.check_text();
+        self.sync_data();
     }
 }
 
-impl From<&Subrip> for SubripListItem {
-    fn from(value: &Subrip) -> Self {
-        Self::new(
-            value.get_content(),
-            value.get_begin_time().format("%H:%M:%S").to_string(),
-            value.get_end_time().format("%H:%M:%S").to_string(),
-        )
+impl From<Rc<RefCell<Subrip>>> for SubripListItem {
+    fn from(value: Rc<RefCell<Subrip>>) -> Self {
+        Self {
+            subrip: value.clone(),
+            content_text: value.borrow_mut().get_content(),
+            begin_time_text: value
+                .borrow_mut()
+                .get_begin_time()
+                .format("%H:%M:%S")
+                .to_string(),
+            end_time_text: value
+                .borrow_mut()
+                .get_end_time()
+                .format("%H:%M:%S")
+                .to_string(),
+            old_content_text: String::new(),
+            old_begin_time_text: String::new(),
+            old_end_time_text: String::new(),
+        }
     }
 }

@@ -70,4 +70,20 @@ impl Subrip {
     pub fn get_content(&self) -> String {
         self.content.clone()
     }
+
+    pub fn get_content_ref(&self) -> &String {
+        &self.content
+    }
+
+    pub fn get_duration(&self) -> Duration {
+        self.end_time - self.begin_time
+    }
+
+    pub fn add_begin_delta(&mut self, delta: f32) {
+        self.begin_time += chrono::TimeDelta::seconds(delta as i64);
+    }
+
+    pub fn add_end_delta(&mut self, delta: f32) {
+        self.end_time += chrono::TimeDelta::seconds(delta as i64);
+    }
 }

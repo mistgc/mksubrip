@@ -13,17 +13,31 @@ pub struct MainWindow {
     menu_bar: Shared<ui::MenuBar>,
     new_subrip_win: Shared<ui::NewSubripWindow>,
     subrip_list_widget: Shared<ui::SubripListWidget>,
+    timeline: Shared<ui::TimeLine>,
 }
 
 impl MainWindow {
     pub fn new(app_state: Rc<RefCell<AppState>>) -> Self {
         let mut ret = Self {
             app_state,
+
             sig_toggle_new_subrip_win: Signal::new(),
+
             menu_bar: Shared::new(ui::MenuBar::new()),
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
             subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
+            timeline: Shared::new(ui::TimeLine::new()),
         };
+
+        let subrip = Rc::new(RefCell::new(crate::Subrip::new(
+            "hello world.",
+            chrono::NaiveTime::from_hms_opt(0, 0, 10).unwrap(),
+            chrono::TimeDelta::seconds(180),
+        )));
+
+        let block = ui::SubripBlock::new(subrip.clone());
+        ret.timeline.borrow_mut().add_subrip_block(block);
+
         ret.init();
 
         ret
@@ -79,6 +93,7 @@ impl Drawable for MainWindow {
             .min_height(300.0)
             .show_inside(eui, |eui| {
                 eui.heading("b1");
+                self.timeline.borrow_mut().draw(ctx, eui);
             });
 
         egui::SidePanel::left("l1")

@@ -3,7 +3,7 @@ _default:
 
 # Build and run the project
 run mode="debug":
-    {{ if mode == "debug" { "RUST_LOG=debug cargo run" } else { "cargo run --" + mode } }}
+    {{ if mode == "debug" { "RUST_LOG=debug cargo run" } else { "RUST_LOG=debug cargo run --" + mode } }}
 
 # Build the project
 build mode="debug":

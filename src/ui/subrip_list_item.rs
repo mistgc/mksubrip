@@ -8,7 +8,7 @@ use crate::{prelude::*, Subrip};
 
 #[derive(Default)]
 pub struct SubripListItem {
-    subrip: Rc<RefCell<Subrip>>,
+    pub(crate) subrip: Rc<RefCell<Subrip>>,
 
     begin_time_text: String,
     end_time_text: String,
@@ -68,6 +68,11 @@ impl SubripListItem {
 
 impl Drawable for SubripListItem {
     fn draw(&mut self, _ctx: &eframe::egui::Context, eui: &mut eframe::egui::Ui) {
+        // Return directly if the subrip is loaded.
+        if self.subrip.borrow_mut().is_loaded() {
+            return;
+        }
+
         let text_edit_width = 120.0;
 
         eui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |eui| {

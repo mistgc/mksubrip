@@ -11,7 +11,7 @@ pub struct SubripBlock {
     state: SubripBlockState,
 
     granularity: Rc<Cell<f32>>,
-    data: Rc<RefCell<Subrip>>,
+    subrip: Rc<RefCell<Subrip>>,
 }
 
 pub struct SubripBlockState {
@@ -29,7 +29,7 @@ impl SubripBlock {
     pub fn new(data: Rc<RefCell<Subrip>>) -> Self {
         Self {
             state: SubripBlockState::new(),
-            data,
+            subrip: data,
             granularity: Rc::new(Cell::new(1.0)),
         }
     }
@@ -61,7 +61,7 @@ impl SubripBlock {
 impl Drawable for SubripBlock {
     fn draw(&mut self, _ctx: &egui::Context, eui: &mut egui::Ui) {
         let cursor_rect = eui.cursor();
-        let mut data = self.data.borrow_mut();
+        let mut data = self.subrip.borrow_mut();
         let ctnt = data.get_content();
         let duration = data.get_duration().num_seconds();
         let width = duration as f32 / self.granularity.get();

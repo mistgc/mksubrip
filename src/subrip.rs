@@ -13,6 +13,7 @@ pub struct Subrip {
     begin_time: NaiveTime,
     end_time: NaiveTime,
     content: String,
+    is_loaded: bool,
 }
 
 impl Subrip {
@@ -28,6 +29,7 @@ impl Subrip {
             begin_time,
             end_time: begin_time + duration,
             content: content.into(),
+            is_loaded: false,
         }
     }
 
@@ -85,5 +87,17 @@ impl Subrip {
 
     pub fn add_end_delta(&mut self, delta: f32) {
         self.end_time += chrono::TimeDelta::seconds(delta as i64);
+    }
+
+    pub fn is_loaded(&self) -> bool {
+        self.is_loaded
+    }
+
+    pub fn set_loading(&mut self, flag: bool) {
+        self.is_loaded = flag;
+    }
+
+    pub fn toggle_loading(&mut self) {
+        self.is_loaded = !self.is_loaded;
     }
 }

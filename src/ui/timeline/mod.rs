@@ -1,12 +1,16 @@
 pub mod subrip_block;
 
+use crate::app::AppState;
 use crate::prelude::*;
 use crate::ui::Drawable;
 use crate::ui::SubripBlock;
+use crate::Subrip;
 
 #[derive(Default)]
 pub struct TimeLine {
     // pub sig_value_changed: Signal<f32>,
+    app_state: Rc<RefCell<AppState>>,
+
     default_height: f32,
     granularity: Rc<Cell<f32>>,
     stroke: egui::Stroke,
@@ -16,8 +20,9 @@ pub struct TimeLine {
 }
 
 impl TimeLine {
-    pub fn new() -> Self {
+    pub fn new(app_state: Rc<RefCell<AppState>>) -> Self {
         Self {
+            app_state,
             default_height: 120.0,
             audio_duration: 1440,
             granularity: Rc::new(Cell::new(1.0)),
@@ -40,6 +45,11 @@ impl TimeLine {
 
     pub fn add_subrip_block(&mut self, subrip_block: SubripBlock) {
         self.subrip_blocks.push(subrip_block);
+    }
+
+    pub fn add_block_from_subrip(&mut self, subrip: &Rc<RefCell<Subrip>>) {
+        let block = SubripBlock::new(subrip.clone());
+        self.subrip_blocks.push(block);
     }
 }
 

@@ -19,14 +19,14 @@ pub struct MainWindow {
 impl MainWindow {
     pub fn new(app_state: Rc<RefCell<AppState>>) -> Self {
         let mut ret = Self {
-            app_state,
+            app_state: app_state.clone(),
 
             sig_toggle_new_subrip_win: Signal::new(),
 
             menu_bar: Shared::new(ui::MenuBar::new()),
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
             subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
-            timeline: Shared::new(ui::TimeLine::new()),
+            timeline: Shared::new(ui::TimeLine::new(app_state.clone())),
         };
 
         let subrip = Rc::new(RefCell::new(crate::Subrip::new(
@@ -73,6 +73,11 @@ impl MainWindow {
             self.new_subrip_win.clone(),
             ui::NewSubripWindow::toggle_visible,
         );
+
+        self.subrip_list_widget
+            .borrow_mut()
+            .sig_subrip_loaded
+            .connect_method(self.timeline.clone(), ui::TimeLine::add_block_from_subrip);
     }
 
     fn update_input_event(&mut self, ctx: &egui::Context) {

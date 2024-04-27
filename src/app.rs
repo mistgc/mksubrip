@@ -1,26 +1,24 @@
 use crate::{
+    prelude::*,
     ui::{self, Drawable},
     Subrip,
 };
 
 use eframe::{self, egui};
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 #[derive(Default)]
 pub struct AppState {
-    pub subrips: Vec<Rc<RefCell<Subrip>>>,
+    pub subrips: Vec<Shared<Subrip>>,
 }
 
 pub struct App {
-    state: Rc<RefCell<AppState>>,
+    state: Shared<AppState>,
     mainwindow: ui::MainWindow,
 }
 
 impl App {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let app_state = Rc::new(RefCell::new(AppState::default()));
+        let app_state = Shared::new(AppState::default());
         Self {
             state: app_state.clone(),
             mainwindow: ui::MainWindow::new(app_state.clone()),

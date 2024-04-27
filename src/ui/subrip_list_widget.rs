@@ -21,14 +21,14 @@ impl SubripListWidget {
         }
     }
 
-    pub fn add(&mut self, item: Rc<RefCell<Subrip>>) {
+    pub fn add(&mut self, item: Shared<Subrip>) {
         let widget = SubripListItem::new(item);
         self.item_widgets.push(Shared::new(widget));
     }
 }
 
-impl From<&Vec<Rc<RefCell<Subrip>>>> for SubripListWidget {
-    fn from(value: &Vec<Rc<RefCell<Subrip>>>) -> Self {
+impl From<&Vec<Shared<Subrip>>> for SubripListWidget {
+    fn from(value: &Vec<Shared<Subrip>>) -> Self {
         let mut ret = Self::new();
         for i in value.iter() {
             ret.add(i.clone());

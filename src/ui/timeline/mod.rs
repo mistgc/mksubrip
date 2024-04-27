@@ -9,7 +9,7 @@ use crate::Subrip;
 #[derive(Default)]
 pub struct TimeLine {
     // pub sig_value_changed: Signal<f32>,
-    app_state: Rc<RefCell<AppState>>,
+    app_state: Shared<AppState>,
 
     default_height: f32,
     granularity: Rc<Cell<f32>>,
@@ -20,7 +20,7 @@ pub struct TimeLine {
 }
 
 impl TimeLine {
-    pub fn new(app_state: Rc<RefCell<AppState>>) -> Self {
+    pub fn new(app_state: Shared<AppState>) -> Self {
         Self {
             app_state,
             default_height: 120.0,

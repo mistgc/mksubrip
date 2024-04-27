@@ -2,11 +2,8 @@ use crate::app::AppState;
 use crate::prelude::*;
 use crate::ui::{self, Drawable};
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 pub struct MainWindow {
-    app_state: Rc<RefCell<AppState>>,
+    app_state: Shared<AppState>,
 
     pub sig_toggle_new_subrip_win: Signal<()>,
 
@@ -14,10 +11,11 @@ pub struct MainWindow {
     new_subrip_win: Shared<ui::NewSubripWindow>,
     subrip_list_widget: Shared<ui::SubripListWidget>,
     timeline: Shared<ui::TimeLine>,
+    moniter: Shared<ui::Moniter>,
 }
 
 impl MainWindow {
-    pub fn new(app_state: Rc<RefCell<AppState>>) -> Self {
+    pub fn new(app_state: Shared<AppState>) -> Self {
         let mut ret = Self {
             app_state: app_state.clone(),
 
@@ -27,16 +25,21 @@ impl MainWindow {
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
             subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
             timeline: Shared::new(ui::TimeLine::new(app_state.clone())),
+            moniter: Shared::new(ui::Moniter::new()),
         };
 
-        let subrip = Rc::new(RefCell::new(crate::Subrip::new(
-            "hello world.",
-            chrono::NaiveTime::from_hms_opt(0, 0, 10).unwrap(),
-            chrono::TimeDelta::seconds(180),
-        )));
-
-        let block = ui::SubripBlock::new(subrip.clone());
-        ret.timeline.borrow_mut().add_subrip_block(block);
+        // TODO:
+        // - [x] Share the subrip data `app_state` and `timeline`.
+        //       `timeline` uses subrip data to calculate the width of the `timeline`,
+        //       and render several `subrip_block`.
+        // - [ ] Complete the functionality of `granularity` of `timeline`.
+        //     - [ ] Granularity will affect the `timeline`.
+        //     - [ ] Granularity will affect the width of the `subrip_block`.
+        // - [ ] Integrate the `egui_video` crate to video viewport.
+        //
+        // FIXME:
+        // - [ ] Limit the minimum width to 20 pix.
+        // - [ ] Limit the x of the position of `subrip_block` to 0.
 
         ret.init();
 
@@ -51,6 +54,11 @@ impl MainWindow {
             .connect_func(|path_buf| {
                 info!("Selected file path is {}", path_buf.to_str().unwrap());
             });
+
+        self.menu_bar
+            .borrow_mut()
+            .sig_open_selected
+            .connect_method(self.moniter.clone(), ui::Moniter::set_media_path);
 
         self.menu_bar
             .borrow_mut()
@@ -128,6 +136,11 @@ impl Drawable for MainWindow {
         // monitor area
         egui::CentralPanel::default().show_inside(eui, |eui| {
             eui.heading("c1");
+            if self.moniter.borrow().ctx.is_none() {
+                self.moniter.borrow_mut().set_ctx(ctx)
+            } else {
+                self.moniter.borrow_mut().draw(ctx, eui);
+            }
         });
     }
 }

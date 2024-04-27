@@ -1,6 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use chrono::NaiveTime;
 
 use crate::ui::Drawable;
@@ -8,7 +5,7 @@ use crate::{prelude::*, Subrip};
 
 #[derive(Default)]
 pub struct SubripListItem {
-    pub(crate) subrip: Rc<RefCell<Subrip>>,
+    pub(crate) subrip: Shared<Subrip>,
 
     begin_time_text: String,
     end_time_text: String,
@@ -20,7 +17,7 @@ pub struct SubripListItem {
 }
 
 impl SubripListItem {
-    pub fn new(subrip: Rc<RefCell<Subrip>>) -> Self {
+    pub fn new(subrip: Shared<Subrip>) -> Self {
         Self {
             subrip: subrip.clone(),
             content_text: subrip.borrow().get_content(),
@@ -95,8 +92,8 @@ impl Drawable for SubripListItem {
     }
 }
 
-impl From<Rc<RefCell<Subrip>>> for SubripListItem {
-    fn from(value: Rc<RefCell<Subrip>>) -> Self {
+impl From<Shared<Subrip>> for SubripListItem {
+    fn from(value: Shared<Subrip>) -> Self {
         Self {
             subrip: value.clone(),
             content_text: value.borrow_mut().get_content(),

@@ -38,3 +38,9 @@ impl<T> Hash for Shared<T> {
         state.write_usize(p);
     }
 }
+
+impl<T: Default> Default for Shared<T> {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}

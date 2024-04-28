@@ -1,6 +1,6 @@
 pub mod mainwindow;
 pub mod menu_bar;
-pub mod moniter;
+pub mod monitor;
 pub mod new_subrip_window;
 pub mod subrip_list_item;
 pub mod subrip_list_widget;
@@ -8,7 +8,7 @@ pub mod timeline;
 
 pub use mainwindow::MainWindow;
 pub use menu_bar::MenuBar;
-pub use moniter::Moniter;
+pub use monitor::Monitor;
 pub use new_subrip_window::NewSubripWindow;
 pub use subrip_list_item::SubripListItem;
 pub use subrip_list_widget::SubripListWidget;

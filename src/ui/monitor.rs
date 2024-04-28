@@ -2,7 +2,7 @@ use crate::core::media_player::{AudioDevice, Player};
 use crate::prelude::*;
 use crate::ui::Drawable;
 
-pub struct Moniter {
+pub struct Monitor {
     pub sig_media_loaded: Signal<()>,
     pub sig_media_duration_s_changed: Signal<i64>,
 
@@ -12,13 +12,13 @@ pub struct Moniter {
     pub(crate) media_path: String,
 }
 
-impl Default for Moniter {
+impl Default for Monitor {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Moniter {
+impl Monitor {
     pub fn new() -> Self {
         Self {
             sig_media_loaded: Signal::new(),
@@ -95,7 +95,7 @@ impl Moniter {
     }
 }
 
-impl Drawable for Moniter {
+impl Drawable for Monitor {
     fn draw(&mut self, _ctx: &egui::Context, eui: &mut egui::Ui) {
         if let Some(player) = &mut self.player {
             player.ui(eui, eui.available_size());

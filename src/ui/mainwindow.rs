@@ -11,7 +11,7 @@ pub struct MainWindow {
     new_subrip_win: Shared<ui::NewSubripWindow>,
     subrip_list_widget: Shared<ui::SubripListWidget>,
     timeline: Shared<ui::TimeLine>,
-    moniter: Shared<ui::Moniter>,
+    monitor: Shared<ui::Monitor>,
 }
 
 impl MainWindow {
@@ -25,7 +25,7 @@ impl MainWindow {
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
             subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
             timeline: Shared::new(ui::TimeLine::new(app_state.clone())),
-            moniter: Shared::new(ui::Moniter::new()),
+            monitor: Shared::new(ui::Monitor::new()),
         };
 
         // TODO:
@@ -58,7 +58,7 @@ impl MainWindow {
         self.menu_bar
             .borrow_mut()
             .sig_open_selected
-            .connect_method(self.moniter.clone(), ui::Moniter::set_media_path);
+            .connect_method(self.monitor.clone(), ui::Monitor::set_media_path);
 
         self.menu_bar
             .borrow_mut()
@@ -87,7 +87,7 @@ impl MainWindow {
             .sig_subrip_loaded
             .connect_method(self.timeline.clone(), ui::TimeLine::add_block_from_subrip);
 
-        self.moniter
+        self.monitor
             .borrow_mut()
             .sig_media_duration_s_changed
             .connect_method(self.timeline.clone(), ui::TimeLine::set_media_duration_s);
@@ -141,10 +141,10 @@ impl Drawable for MainWindow {
         // monitor area
         egui::CentralPanel::default().show_inside(eui, |eui| {
             eui.heading("c1");
-            if self.moniter.borrow().ctx.is_none() {
-                self.moniter.borrow_mut().set_ctx(ctx)
+            if self.monitor.borrow().ctx.is_none() {
+                self.monitor.borrow_mut().set_ctx(ctx)
             } else {
-                self.moniter.borrow_mut().draw(ctx, eui);
+                self.monitor.borrow_mut().draw(ctx, eui);
             }
         });
     }

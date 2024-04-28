@@ -8,12 +8,12 @@ pub enum SubripFormat {
 
 #[derive(Debug, Default)]
 pub struct Subrip {
-    format: SubripFormat,
-    index: u32,
-    begin_time: NaiveTime,
-    end_time: NaiveTime,
-    content: String,
-    is_loaded: bool,
+    pub format: SubripFormat,
+    pub index: u32,
+    pub begin_time: NaiveTime,
+    pub end_time: NaiveTime,
+    pub content: String,
+    pub is_loaded: bool,
 }
 
 impl Subrip {

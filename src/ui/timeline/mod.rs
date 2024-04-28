@@ -8,14 +8,14 @@ use crate::Subrip;
 
 #[derive(Default)]
 pub struct TimeLine {
-    // pub sig_value_changed: Signal<f32>,
+    pub sig_video_seeked: Signal<f32>,
+
     app_state: Shared<AppState>,
 
+    media_duration_s: i64,
     default_height: f32,
-    granularity: Rc<Cell<f32>>,
+    granularity: Shared<f32>,
     stroke: egui::Stroke,
-    audio_data: Vec<f32>,
-    audio_duration: i64,
     subrip_blocks: Vec<SubripBlock>,
 }
 
@@ -24,61 +24,63 @@ impl TimeLine {
         Self {
             app_state,
             default_height: 120.0,
-            audio_duration: 1440,
-            granularity: Rc::new(Cell::new(1.0)),
+            media_duration_s: 0,
+            granularity: Shared::new(1.0),
             stroke: egui::Stroke::new(2.0, egui::Color32::from_hex("#555555").unwrap()),
             ..Self::default()
         }
     }
 
-    pub fn set_audio_duration(&mut self, audio_duration: i64) {
-        self.audio_duration = audio_duration;
+    fn set_granularity(&mut self, granularity: f32) {
+        *self.granularity.borrow_mut() = granularity;
     }
 
-    pub fn set_granularity(&mut self, granularity: f32) {
-        self.granularity.set(granularity);
-    }
+    // pub fn add_subrip_block(&mut self, subrip_block: SubripBlock) {
+    //     self.subrip_blocks.push(subrip_block);
+    // }
 
-    pub fn set_audio_data(&mut self, data: Vec<f32>) {
-        self.audio_data = data;
-    }
+    pub fn add_block_from_subrip(&mut self, subrip: &Shared<Subrip>) {
+        let mut block = SubripBlock::new(subrip.clone());
+        block.set_granularity(self.granularity.clone());
 
-    pub fn add_subrip_block(&mut self, subrip_block: SubripBlock) {
-        self.subrip_blocks.push(subrip_block);
-    }
-
-    pub fn add_block_from_subrip(&mut self, subrip: &Rc<RefCell<Subrip>>) {
-        let block = SubripBlock::new(subrip.clone());
         self.subrip_blocks.push(block);
+    }
+
+    pub fn set_media_duration_s(&mut self, duration_s: &i64) {
+        info!("ui::TimeLine::media_duration_s = {}", duration_s);
+
+        self.media_duration_s = *duration_s;
     }
 }
 
 impl Drawable for TimeLine {
     fn draw(&mut self, ctx: &egui::Context, eui: &mut egui::Ui) {
         let width = ctx.available_rect().width();
-        let _height = self.default_height;
-
+        *self.granularity.borrow_mut() = self.media_duration_s as f32 / width;
         let (resp, painter) = eui.allocate_painter(
-            egui::vec2(width, self.default_height),
+            Vec2::new(width, self.default_height),
             egui::Sense::click_and_drag(),
         );
-        let to_screen = emath::RectTransform::from_to(
+        let transform_to_screen = emath::RectTransform::from_to(
             egui::Rect::from_min_size(Pos2::ZERO, resp.rect.size()),
             resp.rect,
         );
-        let ch = resp.rect.height() / 2.0;
-        let mut sum = 0.0;
 
-        for i in self.audio_data.iter() {
-            let p1 = to_screen.transform_pos(Pos2 { x: sum, y: ch - i });
-            let p2 = to_screen.transform_pos(Pos2 { x: sum, y: ch + i });
+        for i in 10..(width as usize + 1) {
+            if i % 10 == 0 {
+                let p1 = transform_to_screen.transform_pos(Pos2 {
+                    x: i as f32 - 8.0,
+                    y: self.default_height / 2.0,
+                });
 
-            painter.add(egui::Shape::LineSegment {
-                points: [p1, p2],
-                stroke: self.stroke,
-            });
+                let p2 = transform_to_screen.transform_pos(Pos2 {
+                    x: i as f32 - 2.0,
+                    y: self.default_height / 2.0,
+                });
 
-            sum += self.granularity.get();
+                painter.line_segment([p1, p2], self.stroke);
+            } else if i == width as usize + 1 {
+            }
         }
 
         for i in self.subrip_blocks.iter_mut() {

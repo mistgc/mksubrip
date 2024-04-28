@@ -86,6 +86,11 @@ impl MainWindow {
             .borrow_mut()
             .sig_subrip_loaded
             .connect_method(self.timeline.clone(), ui::TimeLine::add_block_from_subrip);
+
+        self.moniter
+            .borrow_mut()
+            .sig_media_duration_s_changed
+            .connect_method(self.timeline.clone(), ui::TimeLine::set_media_duration_s);
     }
 
     fn update_input_event(&mut self, ctx: &egui::Context) {

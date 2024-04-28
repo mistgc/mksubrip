@@ -3,6 +3,9 @@ use crate::prelude::*;
 use crate::ui::Drawable;
 
 pub struct Moniter {
+    pub sig_media_loaded: Signal<()>,
+    pub sig_media_duration_s_changed: Signal<i64>,
+
     pub(crate) ctx: Option<egui::Context>,
     pub(crate) player: Option<Player>,
     pub(crate) audio_device: Option<AudioDevice>,
@@ -18,6 +21,9 @@ impl Default for Moniter {
 impl Moniter {
     pub fn new() -> Self {
         Self {
+            sig_media_loaded: Signal::new(),
+            sig_media_duration_s_changed: Signal::new(),
+
             ctx: None,
             player: None,
             audio_device: None,
@@ -31,6 +37,8 @@ impl Moniter {
             self.media_path = str.to_string();
             if let Some(ctx) = &self.ctx {
                 if let Ok(player) = media_player::Player::new(ctx, &self.media_path) {
+                    self.sig_media_duration_s_changed
+                        .emit(&(player.duration_ms / 1000));
                     if let Ok(audio_device) = media_player::AudioDevice::new() {
                         self.audio_device = Some(audio_device);
                         if let Ok(player_with_audio) =
@@ -69,6 +77,19 @@ impl Moniter {
             player.video_streamer.lock().elapsed_ms().get() / 1000
         } else {
             error!("The field `player` of ui::Moniter is None!");
+
+            0
+        }
+    }
+
+    pub fn get_media_duration(&self) -> i64 {
+        use crate::core::media_player::Streamer;
+
+        if let Some(player) = &self.player {
+            player.video_streamer.lock().duration_ms() / 1000
+        } else {
+            error!("The field `player` of ui::Moniter is None!");
+
             0
         }
     }

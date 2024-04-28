@@ -2,7 +2,7 @@ use crate::ui::{Drawable, SubripListItem};
 use crate::{prelude::*, Subrip};
 
 pub struct SubripListWidget {
-    pub sig_subrip_loaded: Signal<Rc<RefCell<Subrip>>>,
+    pub sig_subrip_loaded: Signal<Shared<Subrip>>,
 
     item_widgets: Vec<Shared<SubripListItem>>,
 }

@@ -10,8 +10,8 @@ const BLOCK_HEIGHT: f32 = 50.0;
 pub struct SubripBlock {
     state: SubripBlockState,
 
-    granularity: Rc<Cell<f32>>,
-    subrip: Rc<RefCell<Subrip>>,
+    granularity: Shared<f32>,
+    subrip: Shared<Subrip>,
 }
 
 pub struct SubripBlockState {
@@ -26,16 +26,16 @@ pub struct SubripBlockState {
 }
 
 impl SubripBlock {
-    pub fn new(data: Rc<RefCell<Subrip>>) -> Self {
+    pub fn new(data: Shared<Subrip>) -> Self {
         Self {
             state: SubripBlockState::new(),
             subrip: data,
-            granularity: Rc::new(Cell::new(1.0)),
+            granularity: Shared::new(1.0),
         }
     }
 
-    pub fn set_granularity(&mut self, granularity: f32) {
-        self.granularity.set(granularity);
+    pub fn set_granularity(&mut self, granularity: Shared<f32>) {
+        self.granularity = granularity;
     }
 
     fn is_hovered_left(&self, resp: &egui::Response) -> bool {
@@ -64,7 +64,7 @@ impl Drawable for SubripBlock {
         let mut data = self.subrip.borrow_mut();
         let ctnt = data.get_content();
         let duration = data.get_duration().num_seconds();
-        let width = duration as f32 / self.granularity.get();
+        let width = duration as f32 / *self.granularity.borrow();
         let height = BLOCK_HEIGHT;
         let rect = utils::new_rect(
             cursor_rect.left() + self.state.pos.x,
@@ -200,7 +200,7 @@ impl Drawable for SubripBlock {
         if self.state.body_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.body_drag_start.x;
-                let time_delta = drag_delta * self.granularity.get();
+                let time_delta = drag_delta * (*self.granularity.borrow());
                 data.add_begin_delta(time_delta);
                 data.add_end_delta(time_delta);
                 self.state.pos.x += drag_delta;
@@ -209,7 +209,7 @@ impl Drawable for SubripBlock {
         } else if self.state.left_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.left_drag_start.x;
-                let time_delta = drag_delta * self.granularity.get();
+                let time_delta = drag_delta * (*self.granularity.borrow());
                 self.state.pos.x += time_delta;
                 data.add_begin_delta(time_delta);
                 self.state.left_drag_start.x = new_drag_new_pos.x;
@@ -217,7 +217,7 @@ impl Drawable for SubripBlock {
         } else if self.state.right_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.right_drag_start.x;
-                data.add_end_delta(drag_delta * self.granularity.get());
+                data.add_end_delta(drag_delta * (*self.granularity.borrow()));
                 self.state.right_drag_start.x = new_drag_new_pos.x;
             }
         }

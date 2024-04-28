@@ -1,6 +1,7 @@
 pub use crate::core::*;
 pub use crate::utils;
 
+pub use anyhow::{anyhow, Result};
 pub use eframe;
 pub use eframe::egui;
 pub use eframe::egui::Pos2;

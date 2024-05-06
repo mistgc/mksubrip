@@ -29,6 +29,7 @@ impl App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |eui| {
+            catppuccin_egui::set_theme(ctx, catppuccin_egui::LATTE);
             self.mainwindow.draw(ctx, eui);
         });
     }

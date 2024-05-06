@@ -33,7 +33,7 @@ impl MenuBar {
 
         if eui.button("OPEN").clicked() {
             if let Some(path_buf) = rfd::FileDialog::new()
-                .add_filter("video", &["mp4", "mkv", "gif"])
+                .add_filter("video", &["mp4", "mkv", "gif", "mov", "flv"])
                 .pick_file()
             {
                 output.path_buf = Some(path_buf);

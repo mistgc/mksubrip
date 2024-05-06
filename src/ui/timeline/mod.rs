@@ -35,9 +35,49 @@ impl TimeLine {
         *self.granularity.borrow_mut() = granularity;
     }
 
-    // pub fn add_subrip_block(&mut self, subrip_block: SubripBlock) {
-    //     self.subrip_blocks.push(subrip_block);
-    // }
+    fn draw_timeline_cursor(
+        &mut self,
+        ctx: &egui::Context,
+        painter: &egui::Painter,
+        timeline_rect: egui::Rect,
+    ) {
+        if let Some(pointer_pos) = ctx.pointer_hover_pos() {
+            if pointer_pos.x > timeline_rect.min.x
+                && pointer_pos.x < timeline_rect.max.x
+                && pointer_pos.y > timeline_rect.min.y
+                && pointer_pos.y < timeline_rect.max.y
+            {
+                let p0 = Pos2 {
+                    x: pointer_pos.x,
+                    y: timeline_rect.min.y,
+                };
+                let p1 = Pos2 {
+                    x: pointer_pos.x,
+                    y: timeline_rect.max.y,
+                };
+                let p2 = Pos2 {
+                    x: pointer_pos.x - 3.0,
+                    y: timeline_rect.min.y,
+                };
+                let p3 = Pos2 {
+                    x: pointer_pos.x + 3.0,
+                    y: timeline_rect.min.y,
+                };
+                let p4 = Pos2 {
+                    x: pointer_pos.x - 3.0,
+                    y: timeline_rect.max.y,
+                };
+                let p5 = Pos2 {
+                    x: pointer_pos.x + 3.0,
+                    y: timeline_rect.max.y,
+                };
+
+                painter.line_segment([p0, p1], self.stroke);
+                painter.line_segment([p2, p3], self.stroke);
+                painter.line_segment([p4, p5], self.stroke);
+            }
+        }
+    }
 
     pub fn add_block_from_subrip(&mut self, subrip: &Shared<Subrip>) {
         let mut block = SubripBlock::new(subrip.clone());
@@ -66,19 +106,21 @@ impl Drawable for TimeLine {
             resp.rect,
         );
 
+        self.draw_timeline_cursor(ctx, &painter, resp.rect);
+
         for i in 10..(width as usize + 1) {
             if i % 10 == 0 {
-                let p1 = transform_to_screen.transform_pos(Pos2 {
+                let p0 = transform_to_screen.transform_pos(Pos2 {
                     x: i as f32 - 8.0,
                     y: self.default_height / 2.0,
                 });
 
-                let p2 = transform_to_screen.transform_pos(Pos2 {
+                let p1 = transform_to_screen.transform_pos(Pos2 {
                     x: i as f32 - 2.0,
                     y: self.default_height / 2.0,
                 });
 
-                painter.line_segment([p1, p2], self.stroke);
+                painter.line_segment([p0, p1], self.stroke);
             } else if i == width as usize + 1 {
             }
         }

@@ -91,6 +91,11 @@ impl MainWindow {
             .borrow_mut()
             .sig_media_duration_s_changed
             .connect_method(self.timeline.clone(), ui::TimeLine::set_media_duration_s);
+
+        self.timeline
+            .borrow_mut()
+            .sig_video_seeked
+            .connect_method(self.monitor.clone(), ui::Monitor::seek);
     }
 
     fn update_input_event(&mut self, ctx: &egui::Context) {

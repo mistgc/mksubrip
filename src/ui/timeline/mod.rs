@@ -39,42 +39,50 @@ impl TimeLine {
         &mut self,
         ctx: &egui::Context,
         painter: &egui::Painter,
-        timeline_rect: egui::Rect,
+        resp: &egui::Response,
     ) {
         if let Some(pointer_pos) = ctx.pointer_hover_pos() {
-            if pointer_pos.x > timeline_rect.min.x
-                && pointer_pos.x < timeline_rect.max.x
-                && pointer_pos.y > timeline_rect.min.y
-                && pointer_pos.y < timeline_rect.max.y
+            if pointer_pos.x > resp.rect.min.x
+                && pointer_pos.x < resp.rect.max.x
+                && pointer_pos.y > resp.rect.min.y
+                && pointer_pos.y < resp.rect.max.y
             {
                 let p0 = Pos2 {
                     x: pointer_pos.x,
-                    y: timeline_rect.min.y,
+                    y: resp.rect.min.y,
                 };
                 let p1 = Pos2 {
                     x: pointer_pos.x,
-                    y: timeline_rect.max.y,
+                    y: resp.rect.max.y,
                 };
                 let p2 = Pos2 {
                     x: pointer_pos.x - 3.0,
-                    y: timeline_rect.min.y,
+                    y: resp.rect.min.y,
                 };
                 let p3 = Pos2 {
                     x: pointer_pos.x + 3.0,
-                    y: timeline_rect.min.y,
+                    y: resp.rect.min.y,
                 };
                 let p4 = Pos2 {
                     x: pointer_pos.x - 3.0,
-                    y: timeline_rect.max.y,
+                    y: resp.rect.max.y,
                 };
                 let p5 = Pos2 {
                     x: pointer_pos.x + 3.0,
-                    y: timeline_rect.max.y,
+                    y: resp.rect.max.y,
                 };
 
                 painter.line_segment([p0, p1], self.stroke);
                 painter.line_segment([p2, p3], self.stroke);
                 painter.line_segment([p4, p5], self.stroke);
+
+                if resp.double_clicked() {
+                    // TODO: the granularity will affect this functionality
+
+                    let t = (pointer_pos.x - resp.rect.min.x) / resp.rect.width();
+                    self.sig_video_seeked.emit(&t);
+                    info!("Seek to {}", t);
+                }
             }
         }
     }
@@ -106,7 +114,7 @@ impl Drawable for TimeLine {
             resp.rect,
         );
 
-        self.draw_timeline_cursor(ctx, &painter, resp.rect);
+        self.draw_timeline_cursor(ctx, &painter, &resp);
 
         for i in 10..(width as usize + 1) {
             if i % 10 == 0 {

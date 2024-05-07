@@ -62,9 +62,9 @@ impl Monitor {
         self.ctx = Some(ctx.clone());
     }
 
-    pub fn seek(&mut self, t: f32) {
+    pub fn seek(&mut self, t: &f32) {
         if let Some(player) = &mut self.player {
-            player.seek(t);
+            player.seek(*t);
         } else {
             error!("The field `player` of ui::Moniter is None!");
         }

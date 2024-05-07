@@ -15,7 +15,7 @@ pub use new_subrip_window::NewSubripWindow;
 pub use subrip_list_item::SubripListItem;
 pub use subrip_list_widget::SubripListWidget;
 pub use timeline::subrip_block::SubripBlock;
-pub use timeline::TimeLine;
+pub use timeline::Timeline;
 
 use eframe::egui;
 

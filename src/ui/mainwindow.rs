@@ -11,7 +11,7 @@ pub struct MainWindow {
     menu_bar: Shared<ui::MenuBar>,
     new_subrip_win: Shared<ui::NewSubripWindow>,
     subrip_list_widget: Shared<ui::SubripListWidget>,
-    timeline: Shared<ui::TimeLine>,
+    timeline: Shared<ui::Timeline>,
     monitor: Shared<ui::Monitor>,
     control_bar: Shared<ui::ControlBar>,
 }
@@ -27,7 +27,7 @@ impl MainWindow {
             menu_bar: Shared::new(ui::MenuBar::new()),
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
             subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
-            timeline: Shared::new(ui::TimeLine::new(app_state.clone())),
+            timeline: Shared::new(ui::Timeline::new(app_state.clone())),
             monitor: Shared::new(ui::Monitor::new()),
             control_bar: Shared::new(ui::ControlBar::new()),
         };
@@ -89,12 +89,12 @@ impl MainWindow {
         self.subrip_list_widget
             .borrow_mut()
             .sig_subrip_loaded
-            .connect_method(self.timeline.clone(), ui::TimeLine::add_block_from_subrip);
+            .connect_method(self.timeline.clone(), ui::Timeline::add_block_from_subrip);
 
         self.monitor
             .borrow_mut()
             .sig_media_duration_s_changed
-            .connect_method(self.timeline.clone(), ui::TimeLine::set_media_duration_s);
+            .connect_method(self.timeline.clone(), ui::Timeline::set_media_duration_s);
 
         self.timeline
             .borrow_mut()
@@ -107,7 +107,7 @@ impl MainWindow {
         self.monitor
             .borrow_mut()
             .sig_media_loaded
-            .connect_method(self.timeline.clone(), ui::TimeLine::set_player);
+            .connect_method(self.timeline.clone(), ui::Timeline::set_player);
 
         self.monitor
             .borrow_mut()

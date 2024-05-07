@@ -9,6 +9,8 @@ use eframe::{self, egui};
 #[derive(Default)]
 pub struct AppState {
     pub subrips: Vec<Shared<Subrip>>,
+    pub screen_width: f32,
+    pub screen_height: f32,
 }
 
 pub struct App {
@@ -18,7 +20,11 @@ pub struct App {
 
 impl App {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let app_state = Shared::new(AppState::default());
+        let app_state = Shared::new(AppState {
+            screen_width: 1024.0,
+            screen_height: 720.0,
+            ..Default::default()
+        });
         Self {
             state: app_state.clone(),
             mainwindow: ui::MainWindow::new(app_state.clone()),

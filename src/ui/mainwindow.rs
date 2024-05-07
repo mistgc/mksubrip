@@ -13,6 +13,7 @@ pub struct MainWindow {
     subrip_list_widget: Shared<ui::SubripListWidget>,
     timeline: Shared<ui::TimeLine>,
     monitor: Shared<ui::Monitor>,
+    control_bar: Shared<ui::ControlBar>,
 }
 
 impl MainWindow {
@@ -28,6 +29,7 @@ impl MainWindow {
             subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
             timeline: Shared::new(ui::TimeLine::new(app_state.clone())),
             monitor: Shared::new(ui::Monitor::new()),
+            control_bar: Shared::new(ui::ControlBar::new()),
         };
 
         // TODO:
@@ -106,6 +108,16 @@ impl MainWindow {
             .borrow_mut()
             .sig_media_loaded
             .connect_method(self.timeline.clone(), ui::TimeLine::set_player);
+
+        self.monitor
+            .borrow_mut()
+            .sig_media_loaded
+            .connect_method(self.control_bar.clone(), ui::ControlBar::set_player);
+
+        self.control_bar
+            .borrow_mut()
+            .sig_btn_play_clicked
+            .connect_method(self.monitor.clone(), ui::Monitor::play);
     }
 
     /// Poll and handle input events
@@ -156,6 +168,7 @@ impl Drawable for MainWindow {
             .min_height(50.0)
             .show_inside(eui, |eui| {
                 eui.heading("b2");
+                self.control_bar.borrow_mut().draw(ctx, eui);
             });
 
         // monitor area

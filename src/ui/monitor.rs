@@ -41,17 +41,22 @@ impl Monitor {
                         .emit(&(player.duration_ms / 1000));
                     // `Player` without control bar
                     player.options.without_control_bar = true;
+                    // Set audio volume
+                    player.options.audio_volume.set(0.6);
+
                     if let Ok(audio_device) = media_player::AudioDevice::new() {
                         self.audio_device = Some(audio_device);
                         if let Ok(player_with_audio) =
                             player.with_audio(self.audio_device.as_mut().unwrap())
                         {
                             let shared_player = Shared::new(player_with_audio);
+
                             self.sig_media_loaded.emit(&shared_player);
                             self.player = Some(shared_player);
                         }
                     } else {
                         let shared_player = Shared::new(player);
+
                         self.sig_media_loaded.emit(&shared_player);
                         self.player = Some(shared_player);
                     }
@@ -76,7 +81,9 @@ impl Monitor {
                 PlayerState::Playing => {
                     borrowed_player.pause();
                 }
-                _ => {}
+                _ => {
+                    borrowed_player.start();
+                }
             }
         } else {
             error!("The field `player` of ui::Moniter is None!");

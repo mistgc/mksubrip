@@ -6,6 +6,7 @@ pub struct MainWindow {
     app_state: Shared<AppState>,
 
     pub sig_toggle_new_subrip_win: Signal<()>,
+    pub sig_toggle_media_play: Signal<()>,
 
     menu_bar: Shared<ui::MenuBar>,
     new_subrip_win: Shared<ui::NewSubripWindow>,
@@ -20,6 +21,7 @@ impl MainWindow {
             app_state: app_state.clone(),
 
             sig_toggle_new_subrip_win: Signal::new(),
+            sig_toggle_media_play: Signal::new(),
 
             menu_bar: Shared::new(ui::MenuBar::new()),
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
@@ -96,11 +98,19 @@ impl MainWindow {
             .borrow_mut()
             .sig_video_seeked
             .connect_method(self.monitor.clone(), ui::Monitor::seek);
+
+        self.sig_toggle_media_play
+            .connect_method(self.monitor.clone(), ui::Monitor::play);
     }
 
+    /// Poll and handle input events
     fn update_input_event(&mut self, ctx: &egui::Context) {
         if ctx.input(|i| i.modifiers.ctrl && i.key_pressed(egui::Key::Enter)) {
             self.sig_toggle_new_subrip_win.emit(&());
+        }
+
+        if ctx.input(|i| i.key_pressed(egui::Key::Space)) {
+            self.sig_toggle_media_play.emit(&());
         }
     }
 }

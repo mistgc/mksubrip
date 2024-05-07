@@ -36,9 +36,10 @@ impl Monitor {
         if let Some(str) = path.to_str() {
             self.media_path = str.to_string();
             if let Some(ctx) = &self.ctx {
-                if let Ok(player) = media_player::Player::new(ctx, &self.media_path) {
+                if let Ok(mut player) = media_player::Player::new(ctx, &self.media_path) {
                     self.sig_media_duration_s_changed
                         .emit(&(player.duration_ms / 1000));
+                    player.options.without_control_bar = true;
                     if let Ok(audio_device) = media_player::AudioDevice::new() {
                         self.audio_device = Some(audio_device);
                         if let Ok(player_with_audio) =
@@ -55,6 +56,24 @@ impl Monitor {
             } else {
                 error!("The field `ctx` of ui::Moniter is None!");
             }
+        }
+    }
+
+    pub fn play(&mut self, _: &()) {
+        use crate::core::media_player::PlayerState;
+
+        if let Some(player) = &mut self.player {
+            match player.player_state.get() {
+                PlayerState::Paused => {
+                    player.resume();
+                }
+                PlayerState::Playing => {
+                    player.pause();
+                }
+                _ => {}
+            }
+        } else {
+            error!("The field `player` of ui::Moniter is None!");
         }
     }
 

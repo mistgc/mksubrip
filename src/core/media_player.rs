@@ -92,6 +92,8 @@ pub struct PlayerOptions {
     pub max_audio_volume: f32,
     /// The texture options for the displayed video frame.
     pub texture_options: TextureOptions,
+    /// Play media without control bar.
+    pub without_control_bar: bool,
 }
 
 impl Default for PlayerOptions {
@@ -101,6 +103,7 @@ impl Default for PlayerOptions {
             max_audio_volume: 1.,
             audio_volume: Shared::new(0.5),
             texture_options: TextureOptions::default(),
+            without_control_bar: false,
         }
     }
 }
@@ -433,7 +436,11 @@ impl Player {
     /// Draw the video frame and player controls and process state changes.
     pub fn ui(&mut self, ui: &mut Ui, size: Vec2) -> egui::Response {
         let frame_response = self.render_frame(ui, size);
-        self.render_controls(ui, &frame_response);
+
+        if !self.options.without_control_bar {
+            self.render_controls(ui, &frame_response);
+        }
+
         self.process_state();
         frame_response
     }

@@ -1,3 +1,4 @@
+pub mod control_bar;
 pub mod mainwindow;
 pub mod menu_bar;
 pub mod monitor;
@@ -6,6 +7,7 @@ pub mod subrip_list_item;
 pub mod subrip_list_widget;
 pub mod timeline;
 
+pub use control_bar::ControlBar;
 pub use mainwindow::MainWindow;
 pub use menu_bar::MenuBar;
 pub use monitor::Monitor;

@@ -72,7 +72,7 @@ impl Drawable for SubripListItem {
 
         let text_edit_width = 120.0;
 
-        eui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |eui| {
+        eui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |eui| {
             egui::TextEdit::singleline(&mut self.begin_time_text)
                 .margin(egui::Vec2 { x: 10.0, y: 10.0 })
                 .desired_width(text_edit_width)
@@ -85,6 +85,7 @@ impl Drawable for SubripListItem {
         });
         egui::TextEdit::multiline(&mut self.content_text)
             .desired_width(eui.available_width())
+            .desired_rows(2)
             .show(eui);
         eui.separator();
 

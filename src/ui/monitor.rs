@@ -3,13 +3,13 @@ use crate::prelude::*;
 use crate::ui::Drawable;
 
 pub struct Monitor {
-    pub sig_media_loaded: Signal<()>,
+    pub sig_media_loaded: Signal<Shared<Player>>,
     pub sig_media_duration_s_changed: Signal<i64>,
 
-    pub(crate) ctx: Option<egui::Context>,
-    pub(crate) player: Option<Player>,
-    pub(crate) audio_device: Option<AudioDevice>,
-    pub(crate) media_path: String,
+    pub ctx: Option<egui::Context>,
+    pub player: Option<Shared<Player>>,
+    pub audio_device: Option<AudioDevice>,
+    pub media_path: String,
 }
 
 impl Default for Monitor {
@@ -39,16 +39,21 @@ impl Monitor {
                 if let Ok(mut player) = media_player::Player::new(ctx, &self.media_path) {
                     self.sig_media_duration_s_changed
                         .emit(&(player.duration_ms / 1000));
+                    // `Player` without control bar
                     player.options.without_control_bar = true;
                     if let Ok(audio_device) = media_player::AudioDevice::new() {
                         self.audio_device = Some(audio_device);
                         if let Ok(player_with_audio) =
                             player.with_audio(self.audio_device.as_mut().unwrap())
                         {
-                            self.player = Some(player_with_audio);
+                            let shared_player = Shared::new(player_with_audio);
+                            self.sig_media_loaded.emit(&shared_player);
+                            self.player = Some(shared_player);
                         }
                     } else {
-                        self.player = Some(player);
+                        let shared_player = Shared::new(player);
+                        self.sig_media_loaded.emit(&shared_player);
+                        self.player = Some(shared_player);
                     }
                 } else {
                     error!("{} is invalid!", &self.media_path);
@@ -63,12 +68,13 @@ impl Monitor {
         use crate::core::media_player::PlayerState;
 
         if let Some(player) = &mut self.player {
-            match player.player_state.get() {
+            let mut borrowed_player = player.borrow_mut();
+            match borrowed_player.player_state.get() {
                 PlayerState::Paused => {
-                    player.resume();
+                    borrowed_player.resume();
                 }
                 PlayerState::Playing => {
-                    player.pause();
+                    borrowed_player.pause();
                 }
                 _ => {}
             }
@@ -83,7 +89,7 @@ impl Monitor {
 
     pub fn seek(&mut self, t: &f32) {
         if let Some(player) = &mut self.player {
-            player.seek(*t);
+            player.borrow_mut().seek(*t);
         } else {
             error!("The field `player` of ui::Moniter is None!");
         }
@@ -93,7 +99,7 @@ impl Monitor {
         use crate::core::media_player::Streamer;
 
         if let Some(player) = &self.player {
-            player.video_streamer.lock().elapsed_ms().get() / 1000
+            player.borrow_mut().video_streamer.lock().elapsed_ms().get() / 1000
         } else {
             error!("The field `player` of ui::Moniter is None!");
 
@@ -105,7 +111,7 @@ impl Monitor {
         use crate::core::media_player::Streamer;
 
         if let Some(player) = &self.player {
-            player.video_streamer.lock().duration_ms() / 1000
+            player.borrow_mut().video_streamer.lock().duration_ms() / 1000
         } else {
             error!("The field `player` of ui::Moniter is None!");
 
@@ -117,7 +123,7 @@ impl Monitor {
 impl Drawable for Monitor {
     fn draw(&mut self, _ctx: &egui::Context, eui: &mut egui::Ui) {
         if let Some(player) = &mut self.player {
-            player.ui(eui, eui.available_size());
+            player.borrow_mut().ui(eui, eui.available_size());
         }
     }
 }

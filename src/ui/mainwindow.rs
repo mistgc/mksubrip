@@ -101,6 +101,11 @@ impl MainWindow {
 
         self.sig_toggle_media_play
             .connect_method(self.monitor.clone(), ui::Monitor::play);
+
+        self.monitor
+            .borrow_mut()
+            .sig_media_loaded
+            .connect_method(self.timeline.clone(), ui::TimeLine::set_player);
     }
 
     /// Poll and handle input events

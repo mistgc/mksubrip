@@ -1,6 +1,7 @@
 pub mod subrip_block;
 
 use crate::app::AppState;
+use crate::core::media_player::{self, Player};
 use crate::prelude::*;
 use crate::ui::Drawable;
 use crate::ui::SubripBlock;
@@ -17,6 +18,7 @@ pub struct TimeLine {
     granularity: Shared<f32>,
     stroke: egui::Stroke,
     subrip_blocks: Vec<SubripBlock>,
+    player: Option<Shared<Player>>,
 }
 
 impl TimeLine {
@@ -35,7 +37,36 @@ impl TimeLine {
         *self.granularity.borrow_mut() = granularity;
     }
 
-    fn draw_timeline_cursor(
+    fn draw_cursor(
+        &mut self,
+        _ctx: &egui::Context,
+        painter: &egui::Painter,
+        resp: &egui::Response,
+    ) {
+        use media_player::Streamer;
+        if let Some(player) = self.player.as_ref() {
+            let borrowed_player = player.borrow_mut();
+            let video_streamer = borrowed_player.video_streamer.lock();
+            let elapsed_s = video_streamer.elapsed_ms().get() / 1000;
+            let duration_s = video_streamer.duration_ms() / 1000;
+            let ratio = elapsed_s as f32 / duration_s as f32;
+            let offset = resp.rect.width() * ratio;
+            let x = resp.rect.min.x + offset;
+
+            let p0 = Pos2 {
+                x,
+                y: resp.rect.min.y,
+            };
+            let p1 = Pos2 {
+                x,
+                y: resp.rect.max.y,
+            };
+
+            painter.line_segment([p0, p1], self.stroke);
+        }
+    }
+
+    fn draw_hovered_cursor(
         &mut self,
         ctx: &egui::Context,
         painter: &egui::Painter,
@@ -99,6 +130,10 @@ impl TimeLine {
 
         self.media_duration_s = *duration_s;
     }
+
+    pub fn set_player(&mut self, player: &Shared<Player>) {
+        self.player = Some(player.clone());
+    }
 }
 
 impl Drawable for TimeLine {
@@ -114,7 +149,8 @@ impl Drawable for TimeLine {
             resp.rect,
         );
 
-        self.draw_timeline_cursor(ctx, &painter, &resp);
+        self.draw_hovered_cursor(ctx, &painter, &resp);
+        self.draw_cursor(ctx, &painter, &resp);
 
         for i in 10..(width as usize + 1) {
             if i % 10 == 0 {

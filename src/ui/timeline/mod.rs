@@ -52,17 +52,12 @@ impl Timeline {
         1.0 / gran
     }
 
-    /// Calculate the interval between two ticks,
+    /// Calculate the interval between two ticks.
+    /// The minimum of the interval equals 8.0 pixels.
     fn calc_tick_step(&self) -> f32 {
         let sec_pixs = self.calc_sec_pixels();
 
-        if sec_pixs < 1.0 {
-            1.0
-        } else if sec_pixs < 2.0 {
-            2.0
-        } else if sec_pixs < 4.0 {
-            4.0
-        } else if sec_pixs < 8.0 {
+        if sec_pixs < 8.0 {
             8.0
         } else if sec_pixs < 16.0 {
             16.0
@@ -155,7 +150,7 @@ impl Timeline {
         }
     }
 
-    /// Draw ticks on timeline.
+    /// Draw ticks on [`Timeline`].
     fn draw_ticks(&mut self, _ctx: &egui::Context, painter: &egui::Painter, resp: &egui::Response) {
         let tick_step = self.calc_tick_step();
         let rect = resp.rect;
@@ -188,10 +183,16 @@ impl Timeline {
         }
     }
 
-    /// Poll and handle input events
-    fn update_input_event(&mut self, _ctx: &egui::Context, _resp: &egui::Response) {}
+    /// Poll and handle input events.
+    fn update_input_event(&mut self, ctx: &egui::Context, _resp: &egui::Response) {
+        if ctx.input(|i| i.key_released(egui::Key::A)) {
+            self.decrease_granularity();
+        } else if ctx.input(|i| i.key_released(egui::Key::B)) {
+            self.increase_granularity();
+        }
+    }
 
-    /// Update duration range when the screen(or window)'s width be changed.
+    /// Update [`Timeline::duration_range`] when the screen(or window)'s width be changed.
     fn update_duration_range(&mut self, width: f32) {
         let gran = self.get_granularity();
         let begin_timestamp = self.duration_range[0];
@@ -199,7 +200,7 @@ impl Timeline {
         self.duration_range[1] = end_timestamp;
     }
 
-    /// Initialize `TimeLine`
+    /// Initialize [`Timeline`]
     fn init(&mut self) {
         // Granularity
         let width = self.app_state.borrow().screen_width;

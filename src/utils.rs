@@ -21,6 +21,21 @@ pub fn range_contains_timestamp(range: &[i64; 2], timestamp: i64) -> bool {
     timestamp >= range[0] && timestamp < range[1]
 }
 
+pub fn range_contains_subrange(range: &[i64; 2], other_range: &[i64; 2]) -> bool {
+    range_contains_timestamp(range, other_range[0])
+        && range_contains_timestamp(range, other_range[1])
+}
+
+pub fn sgn(value: f32) -> i32 {
+    if value > 0.0 {
+        1
+    } else if value < 0.0 {
+        -1
+    } else {
+        0
+    }
+}
+
 mod lerp {
     pub trait Lerp {
         type Output;

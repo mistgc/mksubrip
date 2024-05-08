@@ -12,6 +12,7 @@ pub struct Timeline {
     pub sig_video_seeked: Signal<f32>,
 
     app_state: Shared<AppState>,
+    state: Shared<TimelineState>,
 
     media_duration_s: i64,
     default_height: f32,
@@ -27,6 +28,11 @@ pub struct Timeline {
     /// duration_range = [1000, 10000];
     /// ```
     duration_range: [i64; 2],
+}
+
+#[derive(Default)]
+struct TimelineState {
+    pub width: f32,
 }
 
 impl Timeline {
@@ -68,6 +74,17 @@ impl Timeline {
         }
     }
 
+    fn calc_ticks_range(&self) -> (u32, u32) {
+        let sec_pixs = self.calc_sec_pixels();
+        let tick_step = self.calc_tick_step();
+        let duration_range = &self.duration_range;
+        let interval = duration_range[1] - duration_range[0];
+        let begin_tick = (duration_range[0] as f32 * sec_pixs / tick_step).round() as u32;
+        let end_tick = begin_tick + (interval as f32 * sec_pixs / tick_step).round() as u32;
+
+        (begin_tick, end_tick)
+    }
+
     fn draw_cursor(
         &mut self,
         _ctx: &egui::Context,
@@ -76,25 +93,28 @@ impl Timeline {
     ) {
         use media_player::Streamer;
         if let Some(player) = self.player.as_ref() {
-            let borrowed_player = player.borrow_mut();
+            let borrowed_player = player.borrow();
             let video_streamer = borrowed_player.video_streamer.lock();
             let elapsed_s = video_streamer.elapsed_ms().get() / 1000;
-            let duration_s = video_streamer.duration_ms() / 1000;
-            let ratio = elapsed_s as f32 / duration_s as f32;
-            let tick_step = self.calc_tick_step();
-            let offset_ticks = (resp.rect.width() / tick_step * ratio).floor();
-            let x = resp.rect.min.x + offset_ticks * tick_step;
 
-            let p0 = Pos2 {
-                x,
-                y: resp.rect.min.y,
-            };
-            let p1 = Pos2 {
-                x,
-                y: resp.rect.max.y,
-            };
+            if utils::range_contains_timestamp(&self.duration_range, elapsed_s) {
+                let tick_step = self.calc_tick_step();
+                let sec_pixs = self.calc_sec_pixels();
+                let cur_tick = (elapsed_s as f32 * sec_pixs / tick_step).round() as u32;
+                let (begin_tick, _) = self.calc_ticks_range();
+                let offset_tick = cur_tick - begin_tick;
+                let offset_x = resp.rect.min.x + offset_tick as f32 * tick_step;
+                let p0 = Pos2 {
+                    x: offset_x,
+                    y: resp.rect.min.y,
+                };
+                let p1 = Pos2 {
+                    x: offset_x,
+                    y: resp.rect.max.y,
+                };
 
-            painter.line_segment([p0, p1], self.stroke);
+                painter.line_segment([p0, p1], self.stroke);
+            }
         }
     }
 
@@ -153,29 +173,80 @@ impl Timeline {
     /// Draw ticks on [`Timeline`].
     fn draw_ticks(&mut self, _ctx: &egui::Context, painter: &egui::Painter, resp: &egui::Response) {
         let tick_step = self.calc_tick_step();
-        let rect = resp.rect;
-        let count = (rect.width() / tick_step).round() as u32;
+        let sec_pixs = self.calc_sec_pixels();
+        let (begin_tick, end_tick) = self.calc_ticks_range();
 
-        for i in 0..count {
+        for i in begin_tick..end_tick + 1 {
             if i % 5 == 0 {
                 let p0 = Pos2 {
-                    x: rect.min.x + (i as f32 * tick_step).floor(),
-                    y: rect.min.y,
+                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    y: resp.rect.min.y + 20.0,
                 };
                 let p1 = Pos2 {
-                    x: rect.min.x + (i as f32 * tick_step).floor(),
-                    y: rect.min.y + 20.0,
+                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    y: resp.rect.min.y + 40.0,
                 };
+
+                let total_seconds = (i as f32 * tick_step / sec_pixs) as i64;
+                let mins = total_seconds / 60;
+                let secs = total_seconds % 60;
+
+                debug!("total_seconds = {total_seconds}, mins = {mins}, secs = {secs}");
+                let galley = painter.layout_no_wrap(
+                    format! {"{:02}:{:02}", mins, secs},
+                    egui::FontId::default(),
+                    egui::Color32::from_hex("#777777").unwrap(),
+                );
+
+                painter.galley(
+                    Pos2 {
+                        x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                        y: resp.rect.min.y,
+                    },
+                    galley,
+                    egui::Color32::from_hex("#777777").unwrap(),
+                );
+
+                painter.line_segment([p0, p1], self.stroke);
+            } else if i == end_tick {
+                let p0 = Pos2 {
+                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    y: resp.rect.min.y + 20.0,
+                };
+                let p1 = Pos2 {
+                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    y: resp.rect.min.y + 40.0,
+                };
+
+                let total_seconds = (i as f32 * tick_step / sec_pixs) as i64;
+                let mins = total_seconds / 60;
+                let secs = total_seconds % 60;
+
+                debug!("total_seconds = {total_seconds}, mins = {mins}, secs = {secs}");
+                let galley = painter.layout_no_wrap(
+                    format! {"{:02}:{:02}", mins, secs},
+                    egui::FontId::default(),
+                    egui::Color32::from_hex("#777777").unwrap(),
+                );
+
+                painter.galley(
+                    Pos2 {
+                        x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                        y: resp.rect.min.y,
+                    },
+                    galley,
+                    egui::Color32::from_hex("#777777").unwrap(),
+                );
 
                 painter.line_segment([p0, p1], self.stroke);
             } else {
                 let p0 = Pos2 {
-                    x: rect.min.x + (i as f32 * tick_step).floor(),
-                    y: rect.min.y,
+                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    y: resp.rect.min.y + 20.0,
                 };
                 let p1 = Pos2 {
-                    x: rect.min.x + (i as f32 * tick_step).floor(),
-                    y: rect.min.y + 12.0,
+                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    y: resp.rect.min.y + 32.0,
                 };
 
                 painter.line_segment([p0, p1], self.stroke);
@@ -184,20 +255,30 @@ impl Timeline {
     }
 
     /// Poll and handle input events.
-    fn update_input_event(&mut self, ctx: &egui::Context, _resp: &egui::Response) {
-        if ctx.input(|i| i.key_released(egui::Key::A)) {
-            self.decrease_granularity();
-        } else if ctx.input(|i| i.key_released(egui::Key::B)) {
-            self.increase_granularity();
+    fn update_input_event(&mut self, ctx: &egui::Context, resp: &egui::Response) {
+        if ctx.rect_contains_pointer(resp.layer_id, resp.rect) {
+            ctx.input(|i| {
+                if i.smooth_scroll_delta[0] < 0.0 {
+                    self.decrease_granularity();
+                } else if i.smooth_scroll_delta[0] > 0.0 {
+                    self.increase_granularity();
+                }
+            });
+            ctx.input(|i| {
+                self.move_duration_range(i.smooth_scroll_delta[1]);
+                false
+            });
         }
     }
 
     /// Update [`Timeline::duration_range`] when the screen(or window)'s width be changed.
     fn update_duration_range(&mut self, width: f32) {
-        let gran = self.get_granularity();
-        let begin_timestamp = self.duration_range[0];
-        let end_timestamp = begin_timestamp + (gran * width) as i64;
-        self.duration_range[1] = end_timestamp;
+        if self.state.borrow_mut().is_width_changed(width) {
+            let gran = self.get_granularity();
+            let begin_timestamp = self.duration_range[0];
+            let end_timestamp = begin_timestamp + (gran * width) as i64;
+            self.duration_range[1] = end_timestamp;
+        }
     }
 
     /// Initialize [`Timeline`]
@@ -206,7 +287,7 @@ impl Timeline {
         let width = self.app_state.borrow().screen_width;
         // The minimum of the granularity is 1.0
         let mut gran = self.media_duration_s as f32 / width;
-        gran = utils::clamp(3.0, 0.01, gran);
+        gran = utils::clamp(3.0, 0.016, gran);
         *self.granularity.borrow_mut() = gran;
 
         debug!("Granularity = {}", gran);
@@ -216,15 +297,32 @@ impl Timeline {
     }
 
     fn increase_granularity(&mut self) {
-        let mut gran = *self.granularity.borrow() + 1.0;
+        let mut gran = *self.granularity.borrow() + 0.01;
         gran = gran.min(3.0);
         *self.granularity.borrow_mut() = gran;
     }
 
     fn decrease_granularity(&mut self) {
-        let mut gran = *self.granularity.borrow() - 1.0;
-        gran = gran.max(0.01);
+        let mut gran = *self.granularity.borrow() - 0.01;
+        gran = gran.max(0.016);
         *self.granularity.borrow_mut() = gran;
+    }
+
+    fn move_duration_range(&mut self, delta: f32) {
+        let sgn = -utils::sgn(delta);
+        let sec_pixs = self.calc_sec_pixels();
+        let tick_step = self.calc_tick_step();
+        let tick_secs = tick_step / sec_pixs;
+        let delta_seconds = (sgn as f32 * tick_secs) as i64;
+        let interval = self.duration_range[1] - self.duration_range[0];
+
+        self.duration_range[0] = 0.max(self.duration_range[0] + delta_seconds);
+        self.duration_range[1] = self.duration_range[0] + interval;
+
+        if self.duration_range[1] > self.media_duration_s {
+            self.duration_range[1] = self.media_duration_s;
+            self.duration_range[0] = self.duration_range[1] - interval;
+        }
     }
 
     pub fn get_granularity(&self) -> f32 {
@@ -242,6 +340,7 @@ impl Timeline {
         info!("ui::TimeLine::media_duration_s = {}", duration_s);
 
         self.media_duration_s = *duration_s;
+        self.init();
     }
 
     pub fn set_player(&mut self, player: &Shared<Player>) {
@@ -260,12 +359,21 @@ impl Drawable for Timeline {
 
         self.update_input_event(ctx, &resp);
         self.update_duration_range(width);
+        self.state.borrow_mut().width = width;
         self.draw_cursor(ctx, &painter, &resp);
         self.draw_hovered_cursor(ctx, &painter, &resp);
         self.draw_ticks(ctx, &painter, &resp);
 
         for i in self.subrip_blocks.iter_mut() {
-            i.draw(ctx, eui);
+            if i.is_containsed_in_range(&self.duration_range) {
+                i.draw(ctx, eui);
+            }
         }
+    }
+}
+
+impl TimelineState {
+    pub fn is_width_changed(&self, width: f32) -> bool {
+        self.width != width
     }
 }

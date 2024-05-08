@@ -1,3 +1,5 @@
+use chrono::Timelike;
+
 use crate::prelude::*;
 use crate::ui::Drawable;
 use crate::Subrip;
@@ -36,6 +38,20 @@ impl SubripBlock {
 
     pub fn set_granularity(&mut self, granularity: Shared<f32>) {
         self.granularity = granularity;
+    }
+
+    /// Get the begin timestamp and end timestamp of [`Subrip`] in SECONDS
+    pub fn get_duration_range(&self) -> [i64; 2] {
+        let borrowed_subrip = self.subrip.borrow();
+        let begin_timestamp_s = borrowed_subrip.get_begin_time().num_seconds_from_midnight() as i64;
+        let end_timestamp_s = begin_timestamp_s + borrowed_subrip.get_duration().num_seconds();
+
+        [begin_timestamp_s, end_timestamp_s]
+    }
+
+    /// Check if the duration range is contained in the given range.
+    pub fn is_containsed_in_range(&self, range: &[i64; 2]) -> bool {
+        utils::range_contains_subrange(range, &self.get_duration_range())
     }
 
     fn is_hovered_left(&self, resp: &egui::Response) -> bool {

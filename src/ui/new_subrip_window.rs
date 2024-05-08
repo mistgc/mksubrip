@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use crate::ui::Drawable;
+use crate::ui::Timeline;
 use crate::Subrip;
 
 pub struct NewSubripWindow {
@@ -8,6 +9,7 @@ pub struct NewSubripWindow {
     title: String,
     subrip_text: String,
     visible: bool,
+    timeline: Option<Shared<Timeline>>,
 }
 
 impl Default for NewSubripWindow {
@@ -23,6 +25,7 @@ impl NewSubripWindow {
             title: "New Subrip".to_string(),
             subrip_text: String::new(),
             visible: false,
+            timeline: None,
         }
     }
 
@@ -34,7 +37,13 @@ impl NewSubripWindow {
         use chrono::{Duration, NaiveTime};
 
         // TODO: get begin time from Time Line
-        let begin_time = NaiveTime::from_hms_milli_opt(12, 34, 56, 789).unwrap();
+        // let begin_time = NaiveTime::from_hms_milli_opt(12, 34, 56, 789).unwrap();
+        let begin_time = if let Some(timeline) = self.timeline.as_ref() {
+            let timestamp_s = timeline.borrow().get_cursor_timestamp();
+            NaiveTime::from_num_seconds_from_midnight_opt(timestamp_s as u32, 0).unwrap_or_default()
+        } else {
+            NaiveTime::default()
+        };
         // Default duration
         let duration = Duration::new(5, 0).unwrap();
         let subrip = Subrip::new(&self.subrip_text, begin_time, duration);

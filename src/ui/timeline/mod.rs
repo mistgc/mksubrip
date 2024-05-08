@@ -347,6 +347,16 @@ impl Timeline {
         self.player = Some(player.clone());
         self.init();
     }
+
+    /// Get current timestamp pointed by the cursor of the timeline in SECONDS.
+    /// In other words, get the elapsed duration in SECONDS.
+    pub fn get_cursor_timestamp(&self) -> i64 {
+        if let Some(player) = self.player.as_ref() {
+            player.borrow().elapsed_ms() / 1000
+        } else {
+            0
+        }
+    }
 }
 
 impl Drawable for Timeline {
@@ -365,9 +375,11 @@ impl Drawable for Timeline {
         self.draw_ticks(ctx, &painter, &resp);
 
         for i in self.subrip_blocks.iter_mut() {
-            if i.is_containsed_in_range(&self.duration_range) {
-                i.draw(ctx, eui);
-            }
+            // if i.is_containsed_in_range(&self.duration_range) {
+            //     i.draw(ctx, eui);
+            // }
+            // i.draw(ctx, eui);
+            i.draw_on_timeline(ctx, eui, &resp.rect);
         }
     }
 }

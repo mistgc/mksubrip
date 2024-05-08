@@ -5,7 +5,7 @@ use crate::ui::Drawable;
 use crate::Subrip;
 
 const BORDER_NORMAL_WIDTH: f32 = 1.0;
-const BORDER_HOVER_RANGE: f32 = 15.0;
+const BORDER_HOVER_RANGE: f32 = 8.0;
 const BORDER_HOVERED_WIDTH: f32 = 2.0;
 const BLOCK_HEIGHT: f32 = 50.0;
 
@@ -72,14 +72,225 @@ impl SubripBlock {
     fn is_hovered_body(&self, resp: &egui::Response) -> bool {
         !self.is_hovered_left(resp) && !self.is_hovered_right(resp) && resp.hovered()
     }
+
+    pub fn draw_on_timeline(
+        &mut self,
+        ctx: &egui::Context,
+        eui: &mut egui::Ui,
+        timeline_rect: &egui::Rect,
+    ) {
+        let mut subrip = self.subrip.borrow_mut();
+        let ctnt = subrip.get_content();
+        let duration = subrip.get_duration().num_seconds();
+        let width = duration as f32 / *self.granularity.borrow();
+        let height = BLOCK_HEIGHT;
+        let paint_rect = utils::new_rect(
+            timeline_rect.left() + self.state.pos.x,
+            timeline_rect.top() + 64.0 + self.state.pos.y,
+            timeline_rect.left() + self.state.pos.x + width,
+            timeline_rect.top() + 64.0 + self.state.pos.y + height,
+        );
+        self.state.set_rect(paint_rect);
+        let mut child_ui = eui.child_ui(paint_rect, egui::Layout::default());
+        let (resp, painter) = child_ui.allocate_painter(
+            Vec2::new(width + BORDER_NORMAL_WIDTH * 2.0, height),
+            egui::Sense::click_and_drag(),
+        );
+
+        painter.rect_filled(
+            egui::Rect::from_points(&[
+                [paint_rect.left() + BORDER_NORMAL_WIDTH, paint_rect.top()].into(),
+                [
+                    paint_rect.left() + width - BORDER_NORMAL_WIDTH,
+                    paint_rect.top() + paint_rect.height(),
+                ]
+                .into(),
+            ]),
+            egui::Rounding::default(),
+            egui::Color32::from_hex("#222").unwrap(),
+        );
+
+        if resp.hovered() {
+            painter.rect_filled(
+                egui::Rect::from_points(&[
+                    [paint_rect.left() + BORDER_NORMAL_WIDTH, paint_rect.top()].into(),
+                    [
+                        paint_rect.left() + width - BORDER_NORMAL_WIDTH,
+                        paint_rect.top() + paint_rect.height(),
+                    ]
+                    .into(),
+                ]),
+                egui::Rounding::default(),
+                egui::Color32::from_hex("#555").unwrap(),
+            );
+        }
+
+        painter.rect_filled(
+            egui::Rect::from_points(&[
+                [paint_rect.left(), paint_rect.top()].into(),
+                [
+                    paint_rect.left() + BORDER_NORMAL_WIDTH,
+                    paint_rect.top() + paint_rect.height(),
+                ]
+                .into(),
+            ]),
+            egui::Rounding::default(),
+            egui::Color32::GRAY,
+        );
+
+        if self.is_hovered_left(&resp) {
+            painter.rect_filled(
+                egui::Rect::from_points(&[
+                    [paint_rect.left(), paint_rect.top()].into(),
+                    [
+                        paint_rect.left() + BORDER_HOVERED_WIDTH,
+                        paint_rect.top() + paint_rect.height(),
+                    ]
+                    .into(),
+                ]),
+                egui::Rounding::default(),
+                egui::Color32::WHITE,
+            );
+        }
+
+        painter.rect_filled(
+            egui::Rect::from_points(&[
+                [paint_rect.left() + paint_rect.width(), paint_rect.top()].into(),
+                [
+                    paint_rect.left() + paint_rect.width() + 1.0,
+                    paint_rect.top() + paint_rect.height(),
+                ]
+                .into(),
+            ]),
+            egui::Rounding::default(),
+            egui::Color32::GRAY,
+        );
+
+        let galley = painter.layout(
+            ctnt,
+            egui::FontId::default(),
+            egui::Color32::WHITE,
+            width - 10.0,
+        );
+
+        painter.galley(
+            Pos2::new(paint_rect.left() + 5.0, paint_rect.top()),
+            galley,
+            egui::Color32::PLACEHOLDER,
+        );
+
+        if self.is_hovered_right(&resp) {
+            painter.rect_filled(
+                egui::Rect::from_points(&[
+                    [
+                        paint_rect.left() + paint_rect.width() - BORDER_HOVERED_WIDTH,
+                        paint_rect.top(),
+                    ]
+                    .into(),
+                    [
+                        paint_rect.left() + paint_rect.width(),
+                        paint_rect.top() + paint_rect.height(),
+                    ]
+                    .into(),
+                ]),
+                egui::Rounding::default(),
+                egui::Color32::WHITE,
+            );
+        }
+
+        if resp.drag_started() {
+            if self.is_hovered_left(&resp) {
+                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                    self.state.left_dragging = true;
+                    self.state.left_drag_start = new_drag_start_pos;
+                    self.state.body_dragging = false;
+                    self.state.right_dragging = false;
+                }
+            } else if self.is_hovered_right(&resp) {
+                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                    self.state.right_dragging = true;
+                    self.state.right_drag_start = new_drag_start_pos;
+                    self.state.body_dragging = false;
+                    self.state.left_dragging = false;
+                }
+            } else if self.is_hovered_body(&resp) {
+                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                    self.state.body_dragging = true;
+                    self.state.body_drag_start = new_drag_start_pos;
+                    self.state.left_dragging = false;
+                    self.state.right_dragging = false;
+                }
+            }
+        }
+
+        if self.state.body_dragging {
+            if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
+                let drag_delta = new_drag_new_pos.x - self.state.body_drag_start.x;
+                let time_delta = drag_delta * (*self.granularity.borrow());
+                subrip.add_begin_delta(time_delta);
+                subrip.add_end_delta(time_delta);
+                self.state.pos.x += drag_delta;
+                self.state.body_drag_start.x = new_drag_new_pos.x;
+            }
+        } else if self.state.left_dragging {
+            if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
+                let drag_delta = new_drag_new_pos.x - self.state.left_drag_start.x;
+                let time_delta = drag_delta * (*self.granularity.borrow());
+                self.state.pos.x += time_delta;
+                subrip.add_begin_delta(time_delta);
+                self.state.left_drag_start.x = new_drag_new_pos.x;
+            }
+        } else if self.state.right_dragging {
+            if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
+                let drag_delta = new_drag_new_pos.x - self.state.right_drag_start.x;
+                subrip.add_end_delta(drag_delta * (*self.granularity.borrow()));
+                self.state.right_drag_start.x = new_drag_new_pos.x;
+            }
+        }
+
+        if resp.drag_stopped() {
+            self.state.body_drag_start = Pos2 { x: 0.0, y: 0.0 };
+            self.state.left_drag_start = Pos2 { x: 0.0, y: 0.0 };
+            self.state.right_drag_start = Pos2 { x: 0.0, y: 0.0 };
+            self.state.body_dragging = false;
+            self.state.left_dragging = false;
+            self.state.right_dragging = false;
+        }
+
+        if resp.hovered() {
+            if let Some(pointer_pos) = ctx.pointer_latest_pos() {
+                if paint_rect.contains(pointer_pos) {
+                    egui::show_tooltip_at(
+                        ctx,
+                        resp.id.with("__tooltip"),
+                        Some(pointer_pos),
+                        |ui| {
+                            ui.vertical(|ui| {
+                                let begin_time = subrip.get_begin_time();
+                                let end_time = subrip.get_end_time();
+                                let content = subrip.get_content();
+
+                                ui.label(format!(
+                                    "{} --> {}",
+                                    begin_time.format("%M:%S"),
+                                    end_time.format("%M:%S"),
+                                ));
+                                ui.label(content);
+                            });
+                        },
+                    );
+                }
+            }
+        }
+    }
 }
 
 impl Drawable for SubripBlock {
-    fn draw(&mut self, _ctx: &egui::Context, eui: &mut egui::Ui) {
+    fn draw(&mut self, ctx: &egui::Context, eui: &mut egui::Ui) {
         let cursor_rect = eui.cursor();
-        let mut data = self.subrip.borrow_mut();
-        let ctnt = data.get_content();
-        let duration = data.get_duration().num_seconds();
+        let mut subrip = self.subrip.borrow_mut();
+        let ctnt = subrip.get_content();
+        let duration = subrip.get_duration().num_seconds();
         let width = duration as f32 / *self.granularity.borrow();
         let height = BLOCK_HEIGHT;
         let rect = utils::new_rect(
@@ -217,8 +428,8 @@ impl Drawable for SubripBlock {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.body_drag_start.x;
                 let time_delta = drag_delta * (*self.granularity.borrow());
-                data.add_begin_delta(time_delta);
-                data.add_end_delta(time_delta);
+                subrip.add_begin_delta(time_delta);
+                subrip.add_end_delta(time_delta);
                 self.state.pos.x += drag_delta;
                 self.state.body_drag_start.x = new_drag_new_pos.x;
             }
@@ -227,13 +438,13 @@ impl Drawable for SubripBlock {
                 let drag_delta = new_drag_new_pos.x - self.state.left_drag_start.x;
                 let time_delta = drag_delta * (*self.granularity.borrow());
                 self.state.pos.x += time_delta;
-                data.add_begin_delta(time_delta);
+                subrip.add_begin_delta(time_delta);
                 self.state.left_drag_start.x = new_drag_new_pos.x;
             }
         } else if self.state.right_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.right_drag_start.x;
-                data.add_end_delta(drag_delta * (*self.granularity.borrow()));
+                subrip.add_end_delta(drag_delta * (*self.granularity.borrow()));
                 self.state.right_drag_start.x = new_drag_new_pos.x;
             }
         }
@@ -245,6 +456,10 @@ impl Drawable for SubripBlock {
             self.state.body_dragging = false;
             self.state.left_dragging = false;
             self.state.right_dragging = false;
+        }
+
+        if resp.hovered() {
+            if let Some(_pointer_pos) = ctx.pointer_latest_pos() {}
         }
     }
 }

@@ -6,7 +6,7 @@ pub enum SubripFormat {
     SRT,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Subrip {
     pub format: SubripFormat,
     pub index: u32,

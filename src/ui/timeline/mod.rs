@@ -177,7 +177,7 @@ impl Timeline {
         let (begin_tick, end_tick) = self.calc_ticks_range();
 
         for i in begin_tick..end_tick + 1 {
-            if i % 5 == 0 {
+            if i % 5 == 0 || i == end_tick {
                 let p0 = Pos2 {
                     x: resp.rect.min.x + (i as f32 * tick_step).floor(),
                     y: resp.rect.min.y + 20.0,
@@ -191,38 +191,6 @@ impl Timeline {
                 let mins = total_seconds / 60;
                 let secs = total_seconds % 60;
 
-                debug!("total_seconds = {total_seconds}, mins = {mins}, secs = {secs}");
-                let galley = painter.layout_no_wrap(
-                    format! {"{:02}:{:02}", mins, secs},
-                    egui::FontId::default(),
-                    egui::Color32::from_hex("#777777").unwrap(),
-                );
-
-                painter.galley(
-                    Pos2 {
-                        x: resp.rect.min.x + (i as f32 * tick_step).floor(),
-                        y: resp.rect.min.y,
-                    },
-                    galley,
-                    egui::Color32::from_hex("#777777").unwrap(),
-                );
-
-                painter.line_segment([p0, p1], self.stroke);
-            } else if i == end_tick {
-                let p0 = Pos2 {
-                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
-                    y: resp.rect.min.y + 20.0,
-                };
-                let p1 = Pos2 {
-                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
-                    y: resp.rect.min.y + 40.0,
-                };
-
-                let total_seconds = (i as f32 * tick_step / sec_pixs) as i64;
-                let mins = total_seconds / 60;
-                let secs = total_seconds % 60;
-
-                debug!("total_seconds = {total_seconds}, mins = {mins}, secs = {secs}");
                 let galley = painter.layout_no_wrap(
                     format! {"{:02}:{:02}", mins, secs},
                     egui::FontId::default(),

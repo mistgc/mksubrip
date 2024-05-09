@@ -1,4 +1,5 @@
 use crate::app::AppState;
+use crate::io::{SubripSaveHelper, SubripWriterBuilder};
 use crate::prelude::*;
 use crate::ui::{self, Drawable};
 
@@ -14,6 +15,8 @@ pub struct MainWindow {
     timeline: Shared<ui::Timeline>,
     monitor: Shared<ui::Monitor>,
     control_bar: Shared<ui::ControlBar>,
+
+    subrip_save_helper: Shared<SubripSaveHelper>,
 }
 
 impl MainWindow {
@@ -30,20 +33,9 @@ impl MainWindow {
             timeline: Shared::new(ui::Timeline::new(app_state.clone())),
             monitor: Shared::new(ui::Monitor::new()),
             control_bar: Shared::new(ui::ControlBar::new()),
-        };
 
-        // TODO:
-        // - [x] Share the subrip data `app_state` and `timeline`.
-        //       `timeline` uses subrip data to calculate the width of the `timeline`,
-        //       and render several `subrip_block`.
-        // - [ ] Complete the functionality of `granularity` of `timeline`.
-        //     - [ ] Granularity will affect the `timeline`.
-        //     - [ ] Granularity will affect the width of the `subrip_block`.
-        // - [ ] Integrate the `egui_video` crate to video viewport.
-        //
-        // FIXME:
-        // - [ ] Limit the minimum width to 20 pix.
-        // - [ ] Limit the x of the position of `subrip_block` to 0.
+            subrip_save_helper: Shared::new(SubripSaveHelper::new(app_state.clone())),
+        };
 
         ret.init();
 
@@ -52,6 +44,19 @@ impl MainWindow {
 
     /// Initialize connections between Signals and Functions
     fn init(&mut self) {
+        let save_dir_path_buf = self
+            .subrip_save_helper
+            .borrow()
+            .save_dir_path()
+            .to_path_buf();
+
+        if let Some(srt_writer) = SubripWriterBuilder::generate_writer_from_format(
+            save_dir_path_buf.as_path(),
+            crate::subrip::SubripFormat::SRT,
+        ) {
+            self.subrip_save_helper.borrow_mut().add_writer(srt_writer);
+        }
+
         self.menu_bar
             .borrow_mut()
             .sig_open_selected
@@ -118,6 +123,14 @@ impl MainWindow {
             .borrow_mut()
             .sig_btn_play_clicked
             .connect_method(self.monitor.clone(), ui::Monitor::play);
+
+        self.menu_bar
+            .borrow_mut()
+            .sig_export_srt_selected
+            .connect_method(
+                self.subrip_save_helper.clone(),
+                crate::io::SubripSaveHelper::save,
+            );
     }
 
     /// Poll and handle input events

@@ -1,10 +1,12 @@
 use crate::prelude::*;
-use std::io::Write;
-
 use crate::Writer;
 
+use std::fs;
+use std::io::Write;
+use std::path::Path;
+
 pub struct SrtWriter {
-    file: std::fs::File,
+    file: fs::File,
 }
 
 impl Writer for SrtWriter {
@@ -18,12 +20,11 @@ impl Writer for SrtWriter {
         let content = &subrip.content;
 
         let str = format!(
-            r#"
-{index}
+            r#"{index}
 {begin_time} --> {end_time}
 {content}
 
-            "#
+"#
         );
 
         write!(self.file, "{}", str)?;
@@ -32,10 +33,20 @@ impl Writer for SrtWriter {
     }
 
     fn write_multi(&mut self, subrips: &[crate::Subrip]) -> Result<()> {
-        for i in subrips.iter() {
-            self.write(i)?;
+        for subrip in subrips.iter() {
+            self.write(subrip)?
         }
 
         Ok(())
+    }
+}
+
+impl SrtWriter {
+    pub fn new(path: &Path) -> Result<Self> {
+        let file = fs::File::create(path)?;
+
+        let writer = Self { file };
+
+        Ok(writer)
     }
 }

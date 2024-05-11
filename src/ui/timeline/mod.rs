@@ -25,7 +25,7 @@ pub struct Timeline {
     /// example:
     /// ```rust
     /// // Means from 1000s to 10000s.
-    /// duration_range = [1000, 10000];
+    /// let duration_range = [1000, 10000];
     /// ```
     duration_range: [i64; 2],
 }

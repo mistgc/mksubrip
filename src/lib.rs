@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+pub mod ai;
 pub mod app;
 pub mod core;
 pub mod io;

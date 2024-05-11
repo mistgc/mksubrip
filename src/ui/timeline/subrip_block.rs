@@ -9,6 +9,9 @@ const BORDER_HOVER_RANGE: f32 = 8.0;
 const BORDER_HOVERED_WIDTH: f32 = 2.0;
 const BLOCK_HEIGHT: f32 = 50.0;
 
+// FIXME:
+// 1. The display for data of the subrip is exceptional.
+// 2. Dropping bounds is exceptional.
 pub struct SubripBlock {
     state: SubripBlockState,
 
@@ -399,30 +402,53 @@ impl Drawable for SubripBlock {
             );
         }
 
-        if resp.drag_started() {
-            if self.is_hovered_left(&resp) {
-                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
-                    self.state.left_dragging = true;
-                    self.state.left_drag_start = new_drag_start_pos;
-                    self.state.body_dragging = false;
-                    self.state.right_dragging = false;
-                }
-            } else if self.is_hovered_right(&resp) {
-                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
-                    self.state.right_dragging = true;
-                    self.state.right_drag_start = new_drag_start_pos;
-                    self.state.body_dragging = false;
-                    self.state.left_dragging = false;
-                }
-            } else if self.is_hovered_body(&resp) {
-                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
-                    self.state.body_dragging = true;
-                    self.state.body_drag_start = new_drag_start_pos;
-                    self.state.left_dragging = false;
-                    self.state.right_dragging = false;
-                }
+        if self.is_hovered_left(&resp) && resp.drag_started() {
+            if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                self.state.left_dragging = true;
+                self.state.left_drag_start = new_drag_start_pos;
+                self.state.body_dragging = false;
+                self.state.right_dragging = false;
+            }
+        } else if self.is_hovered_right(&resp) && resp.drag_started() {
+            if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                self.state.right_dragging = true;
+                self.state.right_drag_start = new_drag_start_pos;
+                self.state.body_dragging = false;
+                self.state.left_dragging = false;
+            }
+        } else if self.is_hovered_body(&resp) && resp.drag_started() {
+            if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                self.state.body_dragging = true;
+                self.state.body_drag_start = new_drag_start_pos;
+                self.state.left_dragging = false;
+                self.state.right_dragging = false;
             }
         }
+
+        // if resp.drag_started() {
+        //     if self.is_hovered_left(&resp) {
+        //         if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+        //             self.state.left_dragging = true;
+        //             self.state.left_drag_start = new_drag_start_pos;
+        //             self.state.body_dragging = false;
+        //             self.state.right_dragging = false;
+        //         }
+        //     } else if self.is_hovered_right(&resp) {
+        //         if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+        //             self.state.right_dragging = true;
+        //             self.state.right_drag_start = new_drag_start_pos;
+        //             self.state.body_dragging = false;
+        //             self.state.left_dragging = false;
+        //         }
+        //     } else if self.is_hovered_body(&resp) {
+        //         if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+        //             self.state.body_dragging = true;
+        //             self.state.body_drag_start = new_drag_start_pos;
+        //             self.state.left_dragging = false;
+        //             self.state.right_dragging = false;
+        //         }
+        //     }
+        // }
 
         if self.state.body_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {

@@ -44,17 +44,23 @@ class OpenaiWhisper:
             return []
 
     @staticmethod
-    def convert_to_srt_subtitle(segments: List[Dict[str, Any]]) -> str:
+    def convert_to_json(segments: List[Dict[str, Any]]) -> str:
         import io
         from whisper.utils import format_timestamp
 
         string = io.StringIO("")
+        string.write("'data': [")
         for i, segment in enumerate(segments, start=1):
             index = i
             start = format_timestamp(segment["start"])
             end = format_timestamp(segment["end"])
             text = segment["text"]
-            string.write(f"{index}\n{start} --> {end}\n{text}\n\n")
+            if i == len(segments):
+                string.write(f"{{'index': '{index}', 'start': '{start}', 'end': '{end}', 'text': '{text}'}}")
+            else:
+                string.write(f"{{'index': '{index}', 'start': '{start}', 'end': '{end}', 'text': '{text}'}}, ")
+
+        string.write("]")
 
 
         return string.getvalue()

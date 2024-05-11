@@ -1,6 +1,7 @@
 import utils
 from translator.openai_whisper import OpenaiWhisper
 from translator import ModelScale
+from translator.web import translate_by_baidu_api
 
 from flask import Flask
 from flask import request
@@ -20,6 +21,8 @@ def call_model(model_name, scale):
 
     model.init()
     result = model.translate(file_path)
-    result = OpenaiWhisper.convert_to_srt_subtitle(result)
+    for segement in result:
+        segement["text"] = translate_by_baidu_api(segement["text"], from_lang="jp", to_lang="zh")
+    result = OpenaiWhisper.convert_to_json(result)
 
-    return f"<p>{result}</p>"
+    return result

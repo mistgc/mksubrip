@@ -10,7 +10,13 @@ app = Flask(__name__)
 
 @app.route("/")
 def homepage():
-    return "<p>Hello, MKS(mksubrip) Server!</p>"
+    return \
+"""
+<div align=\"center\">
+    <h1>Hello, MKS(mksubrip) Server!</h1>
+    <p>GitHub Repo: <a href="https://github.com/mistgc/mksubrip/tree/server">https://github.com/mistgc/mksubrip/tree/server</a></p>
+</div>
+"""
 
 @app.route("/model/<string:model_name>/<string:scale>", methods=['POST', 'GET'])
 def call_model(model_name, scale):

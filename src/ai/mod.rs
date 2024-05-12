@@ -48,7 +48,7 @@ impl AiTranslator {
 
     pub fn translate(&self, file_path: &path::Path) -> Vec<Shared<Subrip>> {
         if let Ok(str) = self.request(file_path) {
-            self.string_to_subrips(&str)
+            self.json_str_to_subrips(&str).unwrap_or_default()
         } else {
             vec![]
         }
@@ -80,8 +80,26 @@ impl AiTranslator {
         }
     }
 
-    pub fn string_to_subrips(&self, _str: &str) -> Vec<Shared<Subrip>> {
-        todo!()
+    pub fn json_str_to_subrips(&self, json_str: &str) -> Result<Vec<Shared<Subrip>>> {
+        let value: serde_json::Value = serde_json::from_str(json_str)?;
+        if let Some(data) = value["data"].as_array() {
+            let mut result = vec![];
+            for subrip_json in data.iter() {
+                let index = subrip_json["index"].as_str().unwrap();
+                let start = subrip_json["start"].as_str().unwrap();
+                let end = subrip_json["end"].as_str().unwrap();
+                let text = subrip_json["text"].as_str().unwrap();
+                let subrip = Subrip::from_vec_str([&index, &start, &end, &text])?;
+
+                result.push(Shared::new(subrip));
+            }
+
+            Ok(result)
+        } else {
+            error!("json_str is invalid...");
+
+            Err(anyhow!("json_str is invalid..."))
+        }
     }
 }
 
@@ -92,7 +110,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_request() {
+    fn test_string_to_subrips() {
         let translator = AiTranslator {
             model_type: AIModelType::OpenaiWhisper,
             scale: AIModelScale::Base,
@@ -102,6 +120,10 @@ mod tests {
             .request(path::Path::new("data/test.mp3"))
             .unwrap();
 
-        assert_eq!(text.as_str().slice(0..6), "'data'");
+        assert_eq!(text.as_str().slice(0..7), "{\"data\"");
+
+        let subrips = translator.json_str_to_subrips(text.as_str()).unwrap();
+
+        assert_eq!(subrips[0].borrow().get_index(), 1);
     }
 }

@@ -130,3 +130,30 @@ mod lerp {
         }
     }
 }
+
+pub fn naive_time_from_str(str: &str) -> Result<chrono::NaiveTime> {
+    let mins: u32 = str[0..2].parse()?;
+    let secs: u32 = str[3..5].parse()?;
+    let nano: u32 = str[6..9].parse()?;
+    let naive_time =
+        chrono::NaiveTime::from_num_seconds_from_midnight_opt(mins * 60 + secs, nano * 10e5 as u32)
+            .ok_or(anyhow!("Parsing NaiveTime Failed..."))?;
+
+    Ok(naive_time)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_naive_time_from_str() {
+        let str = "00:05.001";
+        let naive_time = naive_time_from_str(str).unwrap();
+
+        assert_eq!(
+            naive_time,
+            chrono::NaiveTime::from_num_seconds_from_midnight_opt(5, 10e5 as u32).unwrap()
+        );
+    }
+}

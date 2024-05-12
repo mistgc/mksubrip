@@ -1,3 +1,5 @@
+use crate::prelude::*;
+
 use chrono::{Duration, NaiveTime};
 
 #[derive(PartialEq, Eq, Default, Debug, Clone, Copy)]
@@ -31,6 +33,22 @@ impl Subrip {
             content: content.into(),
             is_loaded: false,
         }
+    }
+
+    pub fn from_vec_str(str: [&str; 4]) -> Result<Self> {
+        let index = str[0].parse::<u32>()?;
+        let start = utils::naive_time_from_str(str[1])?;
+        let end = utils::naive_time_from_str(str[2])?;
+        let text = str[3];
+
+        Ok(Self {
+            format: SubripFormat::SRT,
+            index,
+            begin_time: start,
+            end_time: end,
+            content: text.to_string(),
+            is_loaded: false,
+        })
     }
 
     pub fn set_index(&mut self, index: u32) {

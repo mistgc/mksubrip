@@ -13,4 +13,11 @@ fn main() {
         .unwrap();
 
     println!("{text}");
+
+    let result = translator.json_str_to_subrips(text.as_str());
+
+    match result {
+        Ok(subrips) => println!("{}", subrips[0].borrow().get_index()),
+        Err(err) => println!("{}", err),
+    }
 }

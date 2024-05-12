@@ -49,18 +49,18 @@ class OpenaiWhisper:
         from whisper.utils import format_timestamp
 
         string = io.StringIO("")
-        string.write("'data': [")
+        string.write("{\"data\": [")
         for i, segment in enumerate(segments, start=1):
             index = i
             start = format_timestamp(segment["start"])
             end = format_timestamp(segment["end"])
             text = segment["text"]
             if i == len(segments):
-                string.write(f"{{'index': '{index}', 'start': '{start}', 'end': '{end}', 'text': '{text}'}}")
+                string.write(f"{{\"index\": \"{index}\", \"start\": \"{start}\", \"end\": \"{end}\", \"text\": \"{text}\"}}")
             else:
-                string.write(f"{{'index': '{index}', 'start': '{start}', 'end': '{end}', 'text': '{text}'}}, ")
+                string.write(f"{{\"index\": \"{index}\", \"start\": \"{start}\", \"end\": \"{end}\", \"text\": \"{text}\"}}, ")
 
-        string.write("]")
+        string.write("]}")
 
 
         return string.getvalue()

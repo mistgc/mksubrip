@@ -160,10 +160,12 @@ impl Timeline {
                 painter.line_segment([p4, p5], self.stroke);
 
                 if resp.double_clicked() {
-                    // TODO: the granularity will affect this functionality
-
-                    let t = (pointer_pos.x - resp.rect.min.x) / resp.rect.width();
-                    self.sig_video_seeked.emit(&t);
+                    let offset_x = pointer_pos.x - resp.rect.min.x;
+                    let offset_secs =
+                        (offset_x * self.get_granularity()).min(self.duration_range[1] as f32);
+                    let t = (self.duration_range[0] as f32 + offset_secs)
+                        / self.media_duration_s as f32;
+                    self.sig_video_seeked.emit(&{ t });
                     info!("Seek to {}", t);
                 }
             }
@@ -244,7 +246,8 @@ impl Timeline {
         if self.state.borrow_mut().is_width_changed(width) {
             let gran = self.get_granularity();
             let begin_timestamp = self.duration_range[0];
-            let end_timestamp = begin_timestamp + (gran * width) as i64;
+            let end_timestamp =
+                (begin_timestamp + (gran * width) as i64).min(self.media_duration_s);
             self.duration_range[1] = end_timestamp;
         }
     }

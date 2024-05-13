@@ -32,10 +32,10 @@ impl<T> Clone for Shared<T> {
     }
 }
 
-impl<T> Hash for Shared<T> {
+impl<T: Hash> Hash for Shared<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        let p = self as *const Shared<T> as usize;
-        state.write_usize(p);
+        let inner = self.borrow();
+        (*inner).hash(state);
     }
 }
 

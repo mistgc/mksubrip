@@ -48,8 +48,6 @@ impl SubripListWidget {
 }
 
 impl Drawable for SubripListWidget {
-    // FIXME:
-    // Cannot change the sequence of items
     fn draw(&mut self, ctx: &egui::Context, eui: &mut egui::Ui) {
         let mut pos = eui.cursor().min;
         pos.x += eui.available_width();

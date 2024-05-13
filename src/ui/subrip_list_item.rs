@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use chrono::NaiveTime;
 
 use crate::ui::Drawable;
@@ -14,6 +16,16 @@ pub struct SubripListItem {
     old_begin_time_text: String,
     old_end_time_text: String,
     old_content_text: String,
+}
+
+impl Hash for SubripListItem {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        let subrip = self.subrip.borrow();
+        subrip.index.hash(state);
+        subrip.content.hash(state);
+        subrip.begin_time.hash(state);
+        subrip.end_time.hash(state);
+    }
 }
 
 impl SubripListItem {

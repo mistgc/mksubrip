@@ -66,7 +66,7 @@ impl SubripListItem {
 impl Drawable for SubripListItem {
     fn draw(&mut self, _ctx: &eframe::egui::Context, eui: &mut eframe::egui::Ui) {
         // Return directly if the subrip is loaded.
-        if self.subrip.borrow_mut().is_loaded() {
+        if self.subrip.borrow_mut().is_loaded() || self.subrip.borrow_mut().is_deleted() {
             return;
         }
 

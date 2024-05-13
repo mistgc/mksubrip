@@ -54,7 +54,9 @@ impl SubripSaveHelper {
 
         self.app_state.borrow().subrips.iter().for_each(|i| {
             let subrip = i.borrow().clone();
-            subrips.push(subrip);
+            if !subrip.is_deleted() {
+                subrips.push(subrip);
+            }
         });
 
         // Re-sort subrips by `begin_time` of the subrip

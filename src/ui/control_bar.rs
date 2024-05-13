@@ -3,6 +3,7 @@ use crate::ui::Drawable;
 
 pub struct ControlBar {
     pub sig_btn_play_clicked: Signal<()>,
+    pub sig_btn_clear_clicked: Signal<()>,
 
     player: Option<Shared<media_player::Player>>,
 }
@@ -17,6 +18,7 @@ impl ControlBar {
     pub fn new() -> Self {
         Self {
             sig_btn_play_clicked: Signal::new(),
+            sig_btn_clear_clicked: Signal::new(),
             player: None,
         }
     }
@@ -58,6 +60,11 @@ impl Drawable for ControlBar {
             }
 
             eui.label(label_text);
+            eui.add_space(eui.available_width() * 0.8);
+
+            if eui.button("Clear").clicked() {
+                self.sig_btn_clear_clicked.emit(&());
+            }
         });
     }
 }

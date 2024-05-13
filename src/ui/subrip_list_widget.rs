@@ -38,6 +38,13 @@ impl SubripListWidget {
             error!("There isn't video selected...");
         }
     }
+
+    pub fn delete_all_subrips(&mut self, _: &()) {
+        let mut app_state = self.app_state.borrow_mut();
+        app_state.subrips.iter_mut().for_each(|i| {
+            i.borrow_mut().delete();
+        });
+    }
 }
 
 impl Drawable for SubripListWidget {

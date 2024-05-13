@@ -11,6 +11,7 @@ use crate::Subrip;
 pub struct Timeline {
     pub sig_video_seeked: Signal<f32>,
 
+    pub ctx: Option<egui::Context>,
     app_state: Shared<AppState>,
     state: Shared<TimelineState>,
 
@@ -32,7 +33,10 @@ pub struct Timeline {
 
 #[derive(Default)]
 struct TimelineState {
+    pub x: f32,
+    pub y: f32,
     pub width: f32,
+    pub height: f32,
 }
 
 impl Timeline {
@@ -296,6 +300,9 @@ impl Timeline {
         }
     }
 
+    // TODO
+    fn update_resp(&mut self, _resp: &egui::Response) {}
+
     pub fn get_granularity(&self) -> f32 {
         *self.granularity.borrow()
     }
@@ -328,6 +335,17 @@ impl Timeline {
             0
         }
     }
+
+    pub fn set_ctx(&mut self, ctx: &egui::Context) {
+        self.ctx = Some(ctx.clone());
+    }
+
+    // TODO
+    pub fn try_delete_subrip(&mut self, _: &()) {
+        if let Some(ctx) = self.ctx.as_ref() {
+            let _pos = ctx.pointer_latest_pos();
+        }
+    }
 }
 
 impl Drawable for Timeline {
@@ -350,7 +368,10 @@ impl Drawable for Timeline {
             //     i.draw(ctx, eui);
             // }
             // i.draw(ctx, eui);
-            i.draw_on_timeline(ctx, eui, &resp.rect);
+
+            if !i.is_deleted() {
+                i.draw_on_timeline(ctx, eui, &resp.rect);
+            }
         }
     }
 }

@@ -8,14 +8,21 @@ pub enum SubripFormat {
     SRT,
 }
 
+#[derive(Debug, Clone, Default)]
+pub struct SubripState {
+    pub is_loaded: bool,
+    pub is_deleted: bool,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Subrip {
+    pub state: SubripState,
+
     pub format: SubripFormat,
     pub index: u32,
     pub begin_time: NaiveTime,
     pub end_time: NaiveTime,
     pub content: String,
-    pub is_loaded: bool,
 }
 
 impl Subrip {
@@ -26,12 +33,12 @@ impl Subrip {
     ) -> Self {
         let begin_time = begin_time.into();
         Self {
+            state: SubripState::default(),
             format: SubripFormat::SRT,
             index: 0,
             begin_time,
             end_time: begin_time + duration,
             content: content.into(),
-            is_loaded: false,
         }
     }
 
@@ -47,7 +54,7 @@ impl Subrip {
             begin_time: start,
             end_time: end,
             content: text.to_string(),
-            is_loaded: false,
+            state: SubripState::default(),
         })
     }
 
@@ -108,14 +115,39 @@ impl Subrip {
     }
 
     pub fn is_loaded(&self) -> bool {
-        self.is_loaded
+        self.state.is_loaded
     }
 
     pub fn set_loading(&mut self, flag: bool) {
-        self.is_loaded = flag;
+        self.state.is_loaded = flag;
+    }
+
+    pub fn delete(&mut self) {
+        self.state.is_deleted = true;
+    }
+
+    pub fn is_deleted(&self) -> bool {
+        self.state.is_deleted
     }
 
     pub fn toggle_loading(&mut self) {
-        self.is_loaded = !self.is_loaded;
+        self.state.is_loaded = !self.state.is_loaded;
+    }
+}
+
+impl PartialEq for Subrip {
+    fn eq(&self, other: &Self) -> bool {
+        self.content.as_str() == other.content.as_str()
+            && self.index == other.index
+            && self.begin_time == other.begin_time
+            && self.end_time == other.end_time
+            && self.format == other.format
+            && self.state == other.state
+    }
+}
+
+impl PartialEq for SubripState {
+    fn eq(&self, other: &Self) -> bool {
+        self.is_deleted == other.is_deleted && self.is_loaded == other.is_loaded
     }
 }

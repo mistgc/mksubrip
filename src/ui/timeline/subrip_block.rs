@@ -76,6 +76,10 @@ impl SubripBlock {
         !self.is_hovered_left(resp) && !self.is_hovered_right(resp) && resp.hovered()
     }
 
+    pub fn is_deleted(&self) -> bool {
+        self.subrip.borrow().is_deleted()
+    }
+
     pub fn draw_on_timeline(
         &mut self,
         ctx: &egui::Context,
@@ -201,28 +205,26 @@ impl SubripBlock {
             );
         }
 
-        if resp.drag_started() {
-            if self.is_hovered_left(&resp) {
-                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
-                    self.state.left_dragging = true;
-                    self.state.left_drag_start = new_drag_start_pos;
-                    self.state.body_dragging = false;
-                    self.state.right_dragging = false;
-                }
-            } else if self.is_hovered_right(&resp) {
-                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
-                    self.state.right_dragging = true;
-                    self.state.right_drag_start = new_drag_start_pos;
-                    self.state.body_dragging = false;
-                    self.state.left_dragging = false;
-                }
-            } else if self.is_hovered_body(&resp) {
-                if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
-                    self.state.body_dragging = true;
-                    self.state.body_drag_start = new_drag_start_pos;
-                    self.state.left_dragging = false;
-                    self.state.right_dragging = false;
-                }
+        if self.is_hovered_left(&resp) && resp.drag_started() {
+            if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                self.state.left_dragging = true;
+                self.state.left_drag_start = new_drag_start_pos;
+                self.state.body_dragging = false;
+                self.state.right_dragging = false;
+            }
+        } else if self.is_hovered_right(&resp) && resp.drag_started() {
+            if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                self.state.right_dragging = true;
+                self.state.right_drag_start = new_drag_start_pos;
+                self.state.body_dragging = false;
+                self.state.left_dragging = false;
+            }
+        } else if self.is_hovered_body(&resp) && resp.drag_started() {
+            if let Some(new_drag_start_pos) = resp.interact_pointer_pos() {
+                self.state.body_dragging = true;
+                self.state.body_drag_start = new_drag_start_pos;
+                self.state.left_dragging = false;
+                self.state.right_dragging = false;
             }
         }
 

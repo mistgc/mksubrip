@@ -8,6 +8,8 @@ pub struct MainWindow {
 
     pub sig_toggle_new_subrip_win: Signal<()>,
     pub sig_toggle_media_play: Signal<()>,
+    // TODO: use to implement Shortcut
+    pub sig_delete_subrip: Signal<()>,
 
     menu_bar: Shared<ui::MenuBar>,
     new_subrip_win: Shared<ui::NewSubripWindow>,
@@ -26,6 +28,7 @@ impl MainWindow {
 
             sig_toggle_new_subrip_win: Signal::new(),
             sig_toggle_media_play: Signal::new(),
+            sig_delete_subrip: Signal::new(),
 
             menu_bar: Shared::new(ui::MenuBar::new()),
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
@@ -139,6 +142,14 @@ impl MainWindow {
                 self.subrip_list_widget.clone(),
                 ui::SubripListWidget::translate_by_ai,
             );
+
+        self.control_bar
+            .borrow_mut()
+            .sig_btn_clear_clicked
+            .connect_method(
+                self.subrip_list_widget.clone(),
+                ui::SubripListWidget::delete_all_subrips,
+            );
     }
 
     /// Poll and handle input events
@@ -164,7 +175,11 @@ impl Drawable for MainWindow {
             .min_height(300.0)
             .show_inside(eui, |eui| {
                 eui.heading("b1");
-                self.timeline.borrow_mut().draw(ctx, eui);
+                if self.timeline.borrow().ctx.is_none() {
+                    self.timeline.borrow_mut().set_ctx(ctx);
+                } else {
+                    self.timeline.borrow_mut().draw(ctx, eui);
+                }
             });
 
         egui::SidePanel::left("l1")

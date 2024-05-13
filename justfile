@@ -48,3 +48,6 @@ clippy:
 
 fmt:
     cargo fmt -- --check
+
+check:
+    cargo check

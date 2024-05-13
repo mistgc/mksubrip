@@ -6,6 +6,7 @@ use std::path::PathBuf;
 pub struct MenuBar {
     pub sig_open_selected: Signal<PathBuf>,
     pub sig_export_srt_selected: Signal<()>,
+    pub sig_translate_by_ai_selected: Signal<()>,
 }
 
 #[derive(Default)]
@@ -25,6 +26,7 @@ impl MenuBar {
         Self {
             sig_open_selected: Signal::new(),
             sig_export_srt_selected: Signal::new(),
+            sig_translate_by_ai_selected: Signal::new(),
         }
     }
 
@@ -62,6 +64,10 @@ impl Drawable for MenuBar {
             if output.show_export_win_srt {
                 self.sig_export_srt_selected.emit(&());
             }
+        }
+
+        if eui.button("AI").clicked() {
+            self.sig_translate_by_ai_selected.emit(&());
         }
     }
 }

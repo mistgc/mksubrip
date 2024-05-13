@@ -142,6 +142,30 @@ pub fn naive_time_from_str(str: &str) -> Result<chrono::NaiveTime> {
     Ok(naive_time)
 }
 
+use crate::Subrip;
+
+pub fn json_str_to_subrips(json_str: &str) -> Result<Vec<Shared<Subrip>>> {
+    let value: serde_json::Value = serde_json::from_str(json_str)?;
+    if let Some(data) = value["data"].as_array() {
+        let mut result = vec![];
+        for subrip_json in data.iter() {
+            let index = subrip_json["index"].as_str().unwrap();
+            let start = subrip_json["start"].as_str().unwrap();
+            let end = subrip_json["end"].as_str().unwrap();
+            let text = subrip_json["text"].as_str().unwrap();
+            let subrip = Subrip::from_vec_str([index, start, end, text])?;
+
+            result.push(Shared::new(subrip));
+        }
+
+        Ok(result)
+    } else {
+        error!("json_str is invalid...");
+
+        Err(anyhow!("json_str is invalid..."))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

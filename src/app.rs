@@ -4,6 +4,8 @@ use crate::{
     Subrip,
 };
 
+use std::path;
+
 use eframe::{self, egui};
 
 #[derive(Default)]
@@ -11,6 +13,7 @@ pub struct AppState {
     pub subrips: Vec<Shared<Subrip>>,
     pub screen_width: f32,
     pub screen_height: f32,
+    pub file_path_opening: Option<path::PathBuf>,
 }
 
 pub struct App {

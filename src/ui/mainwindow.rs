@@ -29,9 +29,9 @@ impl MainWindow {
 
             menu_bar: Shared::new(ui::MenuBar::new()),
             new_subrip_win: Shared::new(ui::NewSubripWindow::new()),
-            subrip_list_widget: Shared::new(ui::SubripListWidget::new()),
+            subrip_list_widget: Shared::new(ui::SubripListWidget::new(app_state.clone())),
             timeline: Shared::new(ui::Timeline::new(app_state.clone())),
-            monitor: Shared::new(ui::Monitor::new()),
+            monitor: Shared::new(ui::Monitor::new(app_state.clone())),
             control_bar: Shared::new(ui::ControlBar::new()),
 
             subrip_save_helper: Shared::new(SubripSaveHelper::new(app_state.clone())),
@@ -130,6 +130,14 @@ impl MainWindow {
             .connect_method(
                 self.subrip_save_helper.clone(),
                 crate::io::SubripSaveHelper::save,
+            );
+
+        self.menu_bar
+            .borrow_mut()
+            .sig_translate_by_ai_selected
+            .connect_method(
+                self.subrip_list_widget.clone(),
+                ui::SubripListWidget::translate_by_ai,
             );
     }
 

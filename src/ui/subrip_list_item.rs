@@ -39,7 +39,7 @@ impl SubripListItem {
 
     fn sync_data(&mut self) {
         if self.begin_time_text != self.old_begin_time_text {
-            self.old_begin_time_text = self.begin_time_text.clone();
+            self.old_begin_time_text.clone_from(&self.begin_time_text);
             if let Ok(naive_time) =
                 NaiveTime::parse_from_str(self.old_begin_time_text.as_str(), "%H:%M:%S")
             {
@@ -47,7 +47,7 @@ impl SubripListItem {
             }
         }
         if self.end_time_text != self.old_end_time_text {
-            self.old_end_time_text = self.end_time_text.clone();
+            self.old_end_time_text.clone_from(&self.end_time_text);
             if let Ok(naive_time) =
                 NaiveTime::parse_from_str(self.old_end_time_text.as_str(), "%H:%M:%S")
             {
@@ -55,7 +55,7 @@ impl SubripListItem {
             }
         }
         if self.content_text != self.old_content_text {
-            self.old_content_text = self.content_text.clone();
+            self.old_content_text.clone_from(&self.content_text);
             self.subrip
                 .borrow_mut()
                 .set_content(self.old_content_text.as_str());

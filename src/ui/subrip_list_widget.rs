@@ -1,22 +1,20 @@
+use crate::app::AppState;
 use crate::ui::{Drawable, SubripListItem};
-use crate::{prelude::*, Subrip};
+use crate::{ai, prelude::*, Subrip};
 
 pub struct SubripListWidget {
     pub sig_subrip_loaded: Signal<Shared<Subrip>>,
 
+    app_state: Shared<AppState>,
+
     item_widgets: Vec<Shared<SubripListItem>>,
 }
 
-impl Default for SubripListWidget {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl SubripListWidget {
-    pub fn new() -> Self {
+    pub fn new(app_state: Shared<AppState>) -> Self {
         Self {
             sig_subrip_loaded: Signal::new(),
+            app_state,
             item_widgets: vec![],
         }
     }
@@ -25,16 +23,20 @@ impl SubripListWidget {
         let widget = SubripListItem::new(item);
         self.item_widgets.push(Shared::new(widget));
     }
-}
 
-impl From<&Vec<Shared<Subrip>>> for SubripListWidget {
-    fn from(value: &Vec<Shared<Subrip>>) -> Self {
-        let mut ret = Self::new();
-        for i in value.iter() {
-            ret.add(i.clone());
+    pub fn translate_by_ai(&mut self, _: &()) {
+        let translator = ai::AiTranslator::default();
+        let app_state = self.app_state.clone();
+        let mut borrowed_app_state = app_state.borrow_mut();
+        if let Some(path) = borrowed_app_state.file_path_opening.as_ref() {
+            let subrips = translator.translate(path.as_path());
+            for subrip in subrips.iter() {
+                borrowed_app_state.subrips.push(subrip.clone());
+                self.add(subrip.clone());
+            }
+        } else {
+            error!("There isn't video selected...");
         }
-
-        ret
     }
 }
 

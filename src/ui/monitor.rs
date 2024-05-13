@@ -1,3 +1,4 @@
+use crate::app::AppState;
 use crate::core::media_player::{AudioDevice, Player};
 use crate::prelude::*;
 use crate::ui::Drawable;
@@ -6,23 +7,21 @@ pub struct Monitor {
     pub sig_media_loaded: Signal<Shared<Player>>,
     pub sig_media_duration_s_changed: Signal<i64>,
 
+    pub app_state: Shared<AppState>,
+
     pub ctx: Option<egui::Context>,
     pub player: Option<Shared<Player>>,
     pub audio_device: Option<AudioDevice>,
     pub media_path: String,
 }
 
-impl Default for Monitor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Monitor {
-    pub fn new() -> Self {
+    pub fn new(app_state: Shared<AppState>) -> Self {
         Self {
             sig_media_loaded: Signal::new(),
             sig_media_duration_s_changed: Signal::new(),
+
+            app_state,
 
             ctx: None,
             player: None,
@@ -43,6 +42,8 @@ impl Monitor {
                     player.options.without_control_bar = true;
                     // Set audio volume
                     player.options.audio_volume.set(0.6);
+                    // Update APP state
+                    self.app_state.borrow_mut().file_path_opening = Some(path.clone());
 
                     if let Ok(audio_device) = media_player::AudioDevice::new() {
                         self.audio_device = Some(audio_device);

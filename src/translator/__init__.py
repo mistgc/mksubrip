@@ -10,7 +10,7 @@ class ModelScale(Enum):
 
     @staticmethod
     def from_str(scale:str):
-        match str:
+        match scale:
             case "tiny":
                 return ModelScale.Tiny
             case "small":

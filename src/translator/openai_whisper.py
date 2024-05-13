@@ -7,6 +7,7 @@ class OpenaiWhisper:
     def __init__(self, scale: ModelScale):
         self.model_type = ModelType.OpenaiWhisper
         self.scale: ModelScale = scale
+        self.name = "OpenAi Whisper"
         self.model = None
 
     def init(self):
@@ -24,6 +25,9 @@ class OpenaiWhisper:
                 return "base"
             case ModelScale.Large:
                 return "large"
+
+    def get_name(self) -> str:
+        return self.name
 
     def translate(self, file_path: str) -> List[Dict[str, Any]]:
         if self.model is not None:

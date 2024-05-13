@@ -18,12 +18,14 @@ def homepage():
 </div>
 """
 
-@app.route("/model/<string:model_name>/<string:scale>", methods=['POST', 'GET'])
-def call_model(model_name, scale):
+@app.route("/model/<string:model_name>/<string:scale_str>", methods=['POST', 'GET'])
+def call_model(model_name, scale_str):
     file_storage = request.files["data"]
-    scale = ModelScale.from_str(scale)
+    scale = ModelScale.from_str(scale_str)
     model = OpenaiWhisper(scale)
     file_path = utils.handle_upload_file(file_storage)
+
+    print("Model: {}, Scale: {}, File Path: {}".format(model.get_name(), scale, file_path))
 
     model.init()
     result = model.translate(file_path)

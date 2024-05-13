@@ -370,7 +370,7 @@ impl Drawable for Timeline {
             // i.draw(ctx, eui);
 
             if !i.is_deleted() {
-                i.draw_on_timeline(ctx, eui, &resp.rect);
+                i.draw_on_timeline(ctx, eui, &resp.rect, &self.duration_range);
             }
         }
     }

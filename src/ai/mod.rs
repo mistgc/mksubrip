@@ -48,6 +48,7 @@ impl AiTranslator {
 
     pub fn translate(&self, file_path: &path::Path) -> Vec<Shared<Subrip>> {
         if let Ok(str) = self.request(file_path) {
+            debug!("{}", str);
             utils::json_str_to_subrips(&str).unwrap_or_default()
         } else {
             vec![]

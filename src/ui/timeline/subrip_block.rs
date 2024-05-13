@@ -21,6 +21,7 @@ pub struct SubripBlock {
 
 pub struct SubripBlockState {
     pos: Pos2,
+    offset: f32,
     rect: egui::Rect,
     body_dragging: bool,
     body_drag_start: Pos2,
@@ -76,6 +77,33 @@ impl SubripBlock {
         !self.is_hovered_left(resp) && !self.is_hovered_right(resp) && resp.hovered()
     }
 
+    fn get_granularity(&self) -> f32 {
+        *self.granularity.borrow()
+    }
+
+    /// Calculate how may pixels one-second equals to.
+    fn calc_sec_pixels(&self) -> f32 {
+        let gran = self.get_granularity();
+
+        1.0 / gran
+    }
+
+    /// Calculate the interval between two ticks.
+    /// The minimum of the interval equals 8.0 pixels.
+    fn calc_tick_step(&self) -> f32 {
+        let sec_pixs = self.calc_sec_pixels();
+
+        if sec_pixs < 8.0 {
+            8.0
+        } else if sec_pixs < 16.0 {
+            16.0
+        } else if sec_pixs < 32.0 {
+            32.0
+        } else {
+            64.0
+        }
+    }
+
     pub fn is_deleted(&self) -> bool {
         self.subrip.borrow().is_deleted()
     }
@@ -85,11 +113,28 @@ impl SubripBlock {
         ctx: &egui::Context,
         eui: &mut egui::Ui,
         timeline_rect: &egui::Rect,
+        duration_range: &[i64; 2],
     ) {
         let mut subrip = self.subrip.borrow_mut();
+        let begin_timestamp = subrip.begin_time.num_seconds_from_midnight() as i64;
+        let end_timestamp = subrip.end_time.num_seconds_from_midnight() as i64;
+        if begin_timestamp > duration_range[1] || end_timestamp < duration_range[0] {
+            return;
+        }
+
+        let sec_pixs = self.calc_sec_pixels();
+        let delta_pixs = (begin_timestamp - duration_range[0]) as f32 * sec_pixs;
+        let duration_pixs = (end_timestamp - begin_timestamp) as f32 * sec_pixs;
+        let exposed_pixs = if delta_pixs < 0.0 {
+            duration_pixs + delta_pixs
+        } else {
+            duration_pixs
+        };
+        let x = delta_pixs.max(0.0);
+        self.state.pos.x = x;
+
         let ctnt = subrip.get_content();
-        let duration = subrip.get_duration().num_seconds();
-        let width = duration as f32 / *self.granularity.borrow();
+        let width = exposed_pixs;
         let height = BLOCK_HEIGHT;
         let paint_rect = utils::new_rect(
             timeline_rect.left() + self.state.pos.x,
@@ -231,24 +276,28 @@ impl SubripBlock {
         if self.state.body_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.body_drag_start.x;
-                let time_delta = drag_delta * (*self.granularity.borrow());
+                // let time_delta = drag_delta * (*self.granularity.borrow());
+                let time_delta = drag_delta / self.calc_sec_pixels();
                 subrip.add_begin_delta(time_delta);
                 subrip.add_end_delta(time_delta);
-                self.state.pos.x += drag_delta;
+                // self.state.pos.x += drag_delta;
                 self.state.body_drag_start.x = new_drag_new_pos.x;
             }
         } else if self.state.left_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.left_drag_start.x;
-                let time_delta = drag_delta * (*self.granularity.borrow());
-                self.state.pos.x += time_delta;
+                // let time_delta = drag_delta * (*self.granularity.borrow());
+                let time_delta = drag_delta / self.calc_sec_pixels();
+                // self.state.pos.x += time_delta;
                 subrip.add_begin_delta(time_delta);
                 self.state.left_drag_start.x = new_drag_new_pos.x;
             }
         } else if self.state.right_dragging {
             if let Some(new_drag_new_pos) = resp.interact_pointer_pos() {
                 let drag_delta = new_drag_new_pos.x - self.state.right_drag_start.x;
-                subrip.add_end_delta(drag_delta * (*self.granularity.borrow()));
+                // let time_delta = drag_delta * (*self.granularity.borrow());
+                let time_delta = drag_delta / self.calc_sec_pixels();
+                subrip.add_end_delta(time_delta);
                 self.state.right_drag_start.x = new_drag_new_pos.x;
             }
         }
@@ -501,6 +550,7 @@ impl Default for SubripBlockState {
 impl SubripBlockState {
     pub fn new() -> Self {
         Self {
+            offset: 0.0,
             pos: Pos2 { x: 0.0, y: 0.0 },
             rect: utils::new_rect(0.0, 0.0, 0.0, 0.0),
             body_dragging: false,

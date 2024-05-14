@@ -85,15 +85,15 @@ impl Drawable for SubripListItem {
         let text_edit_width = 120.0;
 
         eui.with_layout(egui::Layout::left_to_right(egui::Align::TOP), |eui| {
-            egui::TextEdit::singleline(&mut self.begin_time_text)
+            let begin = egui::TextEdit::singleline(&mut self.begin_time_text)
                 .margin(egui::Vec2 { x: 10.0, y: 10.0 })
-                .desired_width(text_edit_width)
-                .show(eui);
+                .desired_width(text_edit_width);
+            begin.show(eui);
             eui.add_space(eui.available_width() - text_edit_width);
-            egui::TextEdit::singleline(&mut self.end_time_text)
+            let end = egui::TextEdit::singleline(&mut self.end_time_text)
                 .margin(egui::Vec2 { x: 10.0, y: 10.0 })
-                .desired_width(text_edit_width)
-                .show(eui);
+                .desired_width(text_edit_width);
+            end.show(eui);
         });
         egui::TextEdit::multiline(&mut self.content_text)
             .desired_width(eui.available_width())

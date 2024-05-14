@@ -204,7 +204,7 @@ impl SubripBlock {
                     .into(),
                 ]),
                 egui::Rounding::default(),
-                egui::Color32::WHITE,
+                egui::Color32::from_hex("#999").unwrap(),
             );
         }
 
@@ -249,7 +249,7 @@ impl SubripBlock {
                     .into(),
                 ]),
                 egui::Rounding::default(),
-                egui::Color32::WHITE,
+                egui::Color32::from_hex("#999").unwrap(),
             );
         }
 

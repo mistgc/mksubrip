@@ -52,9 +52,7 @@ impl Drawable for SubripListWidget {
         let mut pos = eui.cursor().min;
         pos.x += eui.available_width();
         pos.y += eui.available_height();
-        let item_count = self.item_widgets.len();
         eui.separator();
-        eui.label(format!("Total: {} subrip(s)", item_count));
         eui.separator();
         egui::ScrollArea::vertical().show(eui, |eui| {
             egui_dnd::dnd(eui, "Subrips List").show_vec(

@@ -87,7 +87,7 @@ impl SubripWriterBuilder {
     ) -> Option<Box<dyn Writer>> {
         match format {
             SubripFormat::SRT => {
-                let file_path = save_dir_path.join("a.srt");
+                let file_path = save_dir_path.join("exported.srt");
                 if let Ok(srt_writer) = SrtWriter::new(file_path.as_path()) {
                     Some(Box::new(srt_writer))
                 } else {

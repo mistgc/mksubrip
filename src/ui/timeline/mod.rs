@@ -189,11 +189,13 @@ impl Timeline {
         for i in begin_tick..end_tick + 1 {
             if i % 5 == 0 || i == end_tick {
                 let p0 = Pos2 {
-                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    x: resp.rect.min.x
+                        + (i as f32 * tick_step - begin_tick as f32 * tick_step).floor(),
                     y: resp.rect.min.y + 20.0,
                 };
                 let p1 = Pos2 {
-                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    x: resp.rect.min.x
+                        + (i as f32 * tick_step - begin_tick as f32 * tick_step).floor(),
                     y: resp.rect.min.y + 40.0,
                 };
 
@@ -209,7 +211,8 @@ impl Timeline {
 
                 painter.galley(
                     Pos2 {
-                        x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                        x: resp.rect.min.x
+                            + (i as f32 * tick_step - begin_tick as f32 * tick_step).floor(),
                         y: resp.rect.min.y,
                     },
                     galley,
@@ -219,11 +222,13 @@ impl Timeline {
                 painter.line_segment([p0, p1], self.stroke);
             } else {
                 let p0 = Pos2 {
-                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    x: resp.rect.min.x
+                        + (i as f32 * tick_step - begin_tick as f32 * tick_step).floor(),
                     y: resp.rect.min.y + 20.0,
                 };
                 let p1 = Pos2 {
-                    x: resp.rect.min.x + (i as f32 * tick_step).floor(),
+                    x: resp.rect.min.x
+                        + (i as f32 * tick_step - begin_tick as f32 * tick_step).floor(),
                     y: resp.rect.min.y + 32.0,
                 };
 
@@ -244,20 +249,16 @@ impl Timeline {
             });
             ctx.input(|i| {
                 self.move_duration_range(i.smooth_scroll_delta[1]);
-                false
             });
         }
     }
 
     /// Update [`Timeline::duration_range`] when the screen(or window)'s width be changed.
     fn update_duration_range(&mut self, width: f32) {
-        if self.state.borrow_mut().is_width_changed(width) {
-            let gran = self.get_granularity();
-            let begin_timestamp = self.duration_range[0];
-            let end_timestamp =
-                (begin_timestamp + (gran * width) as i64).min(self.media_duration_s);
-            self.duration_range[1] = end_timestamp;
-        }
+        let gran = self.get_granularity();
+        let begin_timestamp = self.duration_range[0];
+        let end_timestamp = (begin_timestamp + (gran * width) as i64).min(self.media_duration_s);
+        self.duration_range[1] = end_timestamp;
     }
 
     /// Initialize [`Timeline`]

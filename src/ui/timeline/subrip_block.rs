@@ -13,6 +13,8 @@ const BLOCK_HEIGHT: f32 = 50.0;
 // 1. The display for data of the subrip is exceptional.
 // 2. Dropping bounds is exceptional.
 pub struct SubripBlock {
+    pub sig_edit_subrip_win_showed: Signal<Shared<Subrip>>,
+
     state: SubripBlockState,
 
     granularity: Shared<f32>,
@@ -34,6 +36,7 @@ pub struct SubripBlockState {
 impl SubripBlock {
     pub fn new(data: Shared<Subrip>) -> Self {
         Self {
+            sig_edit_subrip_win_showed: Signal::new(),
             state: SubripBlockState::new(),
             subrip: data,
             granularity: Shared::new(1.0),
@@ -335,6 +338,12 @@ impl SubripBlock {
                     );
                 }
             }
+        }
+
+        drop(subrip);
+
+        if resp.secondary_clicked() {
+            self.sig_edit_subrip_win_showed.emit(&self.subrip);
         }
     }
 }

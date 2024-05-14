@@ -4,6 +4,7 @@ use crate::app::AppState;
 use crate::core::media_player::{self, Player};
 use crate::prelude::*;
 use crate::ui::Drawable;
+use crate::ui::EditSubripWindow;
 use crate::ui::SubripBlock;
 use crate::Subrip;
 
@@ -29,6 +30,8 @@ pub struct Timeline {
     /// let duration_range = [1000, 10000];
     /// ```
     duration_range: [i64; 2],
+
+    edit_subrip_win: Shared<EditSubripWindow>,
 }
 
 #[derive(Default)]
@@ -47,6 +50,7 @@ impl Timeline {
             media_duration_s: 0,
             granularity: Shared::new(0.1),
             stroke: egui::Stroke::new(2.0, egui::Color32::from_hex("#555555").unwrap()),
+            edit_subrip_win: Shared::new(EditSubripWindow::new()),
             ..Self::default()
         }
     }
@@ -309,6 +313,9 @@ impl Timeline {
 
     pub fn add_block_from_subrip(&mut self, subrip: &Shared<Subrip>) {
         let mut block = SubripBlock::new(subrip.clone());
+        block
+            .sig_edit_subrip_win_showed
+            .connect_method(self.edit_subrip_win.clone(), EditSubripWindow::edit_subrip);
         block.set_granularity(self.granularity.clone());
 
         self.subrip_blocks.push(block);
@@ -356,6 +363,7 @@ impl Drawable for Timeline {
             egui::Sense::click_and_drag(),
         );
 
+        self.edit_subrip_win.borrow_mut().draw(ctx, eui);
         self.update_input_event(ctx, &resp);
         self.update_duration_range(width);
         self.state.borrow_mut().width = width;

@@ -20,7 +20,10 @@ pub fn post_with_multipart<U: Into<String>>(
     let full_url = format!("{BASE_URL}{}", url.into().as_str());
     debug!("Full URL = {}", full_url);
     let client = blocking::Client::new();
-    let request_builder = client.post(full_url).multipart(multipart);
+    let request_builder = client
+        .post(full_url)
+        .multipart(multipart)
+        .timeout(std::time::Duration::new(0xffffff, 0));
 
     request_builder.send()
 }

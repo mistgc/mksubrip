@@ -151,3 +151,25 @@ impl PartialEq for SubripState {
         self.is_deleted == other.is_deleted && self.is_loaded == other.is_loaded
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{Duration, NaiveTime};
+
+    fn test_subrip() {
+        let subrip = Subrip::new(
+            "hello world",
+            NaiveTime::parse_from_str("00:00.001", "%M:%S%.3f").unwrap(),
+            Duration::seconds(5),
+        );
+
+        let other = Subrip::new(
+            "hello world",
+            NaiveTime::parse_from_str("00:00.001", "%M:%S%.3f").unwrap(),
+            Duration::seconds(5),
+        );
+
+        assert_eq!(subrip, other);
+    }
+}
